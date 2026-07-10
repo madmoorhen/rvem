@@ -25,6 +25,9 @@
   }\
 } while (0)
 
+/* Signed value from unsigned */
+static int32_t signed32(uint32_t val) { return *((int32_t *)(&val)); }
+
 /* Memory region */
 typedef struct {
   uint32_t addr;
@@ -190,14 +193,17 @@ static void step(rv32i_t *cpu) {
   bool incpc = true;
   switch (opcode) {
     case 0x37: /* LUI */
+      set_reg(cpu, rd, u_imm);
       break;
     case 0x17: /* AUIPC */
+      set_reg(cpu, rd, u_imm + cpu->pc);
       break;
     case 0x6f: /* JAL */
       break;
     case 0x67:
       if (funct3 == 0) { /* JALR */
-      } break;
+      } else printf("Invalid instruction!");
+      break;
     case 0x63: /* Conditional branch */
       switch (funct3) {
         case 0: /* BEQ */
@@ -211,6 +217,9 @@ static void step(rv32i_t *cpu) {
         case 6: /* BLTU */
           break;
         case 7: /* BGEU */
+          break;
+        default:
+          printf("Invalid instruction!");
           break;
       };
       break;
@@ -226,6 +235,9 @@ static void step(rv32i_t *cpu) {
           break;
         case 5: /* LHU */
           break;
+        default:
+          printf("Invalid instruction!");
+          break;
       };
       break;
     case 0x23: /* Store */
@@ -236,31 +248,52 @@ static void step(rv32i_t *cpu) {
           break;
         case 2: /* SW */
           break;
+        default:
+          printf("Invalid instruction!");
+          break;
       };
       break;
     case 0x13: /* Arithmetic rs1, imm -> rd */
       switch (funct3) {
         case 0: /* ADDI */
+          set_reg(cpu, rd, get_reg(cpu, rs1) + i_imm);
           break;
         case 2: /* SLTI */
+          set_reg(cpu, rd, signed32(get_reg(cpu, rs1)) < signed32(i_imm));
           break;
         case 3: /* SLTIU */
+          set_reg(cpu, rd, get_reg(cpu, rs1) < i_imm);
           break;
         case 4: /* XORI */
+          set_reg(cpu, rd, get_reg(cpu, rs1) ^ i_imm);
           break;
         case 6: /* ORI */
+          set_reg(cpu, rd, get_reg(cpu, rs1) | i_imm);
           break;
         case 7: /* ANDI */
+          set_reg(cpu, rd, get_reg(cpu, rs1) & i_imm);
           break;
         case 1: /* SLLI*/
+          set_reg(cpu, rd, get_reg(cpu, rs1) << rs2);
           break;
         case 5: /* Right shift */
           switch (funct7) {
             case 0: /* SRLI */
+              set_reg(cpu, rd, get_reg(cpu, rs1) >> rs2);
               break;
             case 0x20: /* SRAI */
+              set_reg(
+                  cpu, rd,
+                  (get_reg(cpu, rs1) >> rs2) | (get_reg(cpu, rs1) & 0x80000000)
+              );
+              break;
+            default:
+              printf("Invalid instruction!");
               break;
           } break;
+        default:
+          printf("Invalid instruction!");
+          break;
       };
       break;
     case 0x33: /* Arithmetic rs1, rs2 -> rd */
@@ -268,30 +301,56 @@ static void step(rv32i_t *cpu) {
         case 0: /* Add/subtract */
           switch (funct7) {
             case 0: /* ADD */
+              set_reg(cpu, rd, get_reg(cpu, rs1) + get_reg(cpu, rs2));
               break;
             case 0x20: /* SUB */
+              set_reg(cpu, rd, get_reg(cpu, rs1) + ~(get_reg(cpu, rs2)) + 1);
+              break;
+            default:
+              printf("Invalid instruction!");
               break;
           };
           break;
         case 1: /* SLL */
+          set_reg(cpu, rd, get_reg(cpu, rs1) << (get_reg(cpu, rs2) & 0x1f));
           break;
         case 2: /* SLT */
+          set_reg(
+              cpu, rd,
+              signed32(get_reg(cpu, rs1)) < signed32(get_reg(cpu, rs2))
+          );
           break;
         case 3: /* SLTU */
+          set_reg(cpu, rd, get_reg(cpu, rs1) < get_reg(cpu, rs2));
           break;
         case 4: /* XOR */
+          set_reg(cpu, rd, get_reg(cpu, rs1) ^ get_reg(cpu, rs2));
           break;
         case 5: /* Right shift */
           switch (funct7) {
             case 0: /* SRL */
+              set_reg(cpu, rd, get_reg(cpu, rs1) << (get_reg(cpu, rs2) & 0x1f));
               break;
             case 0x20: /* SRA */
+              set_reg(
+                  cpu, rd,
+                  (get_reg(cpu, rs1) << (get_reg(cpu, rs2) & 0x1f))
+                    | (get_reg(cpu, rs1) & 0x80000000)
+              );
+              break;
+            default:
+              printf("Invalid instruction!");
               break;
           };
           break;
         case 6: /* OR */
+          set_reg(cpu, rd, get_reg(cpu, rs1) | get_reg(cpu, rs2));
           break;
         case 7: /* AND */
+          set_reg(cpu, rd, get_reg(cpu, rs1) & get_reg(cpu, rs2));
+          break;
+        default:
+          printf("Invalid instruction!");
           break;
       };
       break;
@@ -303,6 +362,9 @@ static void step(rv32i_t *cpu) {
       } break;
     case 0x73: /* Environment */
       /* TODO: ECALL or EBREAK */
+      break;
+    default:
+      printf("Invalid instruction!");
       break;
   };
 
