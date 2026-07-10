@@ -2,7 +2,14 @@
 #ifndef RVEM_H
 #define RVEM_H
 
-/* https://docs.riscv.org/reference/isa/v20260120/unpriv/rv32.html */
+/*
+ * Unprivileged ISA:
+ * - https://riscv.github.io/riscv-isa-manual/snapshot/spec/#vol:unpriv
+ * Privileged ISA:
+ * - https://riscv.github.io/riscv-isa-manual/snapshot/spec/#vol:priv
+ * Profiles:
+ * - https://riscv.github.io/riscv-isa-manual/snapshot/spec/#vol:profiles
+ */
 
 /* Includes */
 #include <stdint.h>
@@ -182,7 +189,121 @@ static void step(rv32i_t *cpu) {
   /* Execute */
   bool incpc = true;
   switch (opcode) {
-    /* TODO */
+    case 0x37: /* LUI */
+      break;
+    case 0x17: /* AUIPC */
+      break;
+    case 0x6f: /* JAL */
+      break;
+    case 0x67:
+      if (funct3 == 0) { /* JALR */
+      } break;
+    case 0x63: /* Conditional branch */
+      switch (funct3) {
+        case 0: /* BEQ */
+          break;
+        case 1: /* BNE */
+          break;
+        case 4: /* BLT */
+          break;
+        case 5: /* BGE */
+          break;
+        case 6: /* BLTU */
+          break;
+        case 7: /* BGEU */
+          break;
+      };
+      break;
+    case 0x03: /* Load */
+      switch (funct3) {
+        case 0: /* LB */
+          break;
+        case 1: /* LH */
+          break;
+        case 2: /* LW */
+          break;
+        case 4: /* LBU */
+          break;
+        case 5: /* LHU */
+          break;
+      };
+      break;
+    case 0x23: /* Store */
+      switch (funct3) {
+        case 0: /* SB */
+          break;
+        case 1: /* SH */
+          break;
+        case 2: /* SW */
+          break;
+      };
+      break;
+    case 0x13: /* Arithmetic rs1, imm -> rd */
+      switch (funct3) {
+        case 0: /* ADDI */
+          break;
+        case 2: /* SLTI */
+          break;
+        case 3: /* SLTIU */
+          break;
+        case 4: /* XORI */
+          break;
+        case 6: /* ORI */
+          break;
+        case 7: /* ANDI */
+          break;
+        case 1: /* SLLI*/
+          break;
+        case 5: /* Right shift */
+          switch (funct7) {
+            case 0: /* SRLI */
+              break;
+            case 0x20: /* SRAI */
+              break;
+          } break;
+      };
+      break;
+    case 0x33: /* Arithmetic rs1, rs2 -> rd */
+      switch (funct3) {
+        case 0: /* Add/subtract */
+          switch (funct7) {
+            case 0: /* ADD */
+              break;
+            case 0x20: /* SUB */
+              break;
+          };
+          break;
+        case 1: /* SLL */
+          break;
+        case 2: /* SLT */
+          break;
+        case 3: /* SLTU */
+          break;
+        case 4: /* XOR */
+          break;
+        case 5: /* Right shift */
+          switch (funct7) {
+            case 0: /* SRL */
+              break;
+            case 0x20: /* SRA */
+              break;
+          };
+          break;
+        case 6: /* OR */
+          break;
+        case 7: /* AND */
+          break;
+      };
+      break;
+    case 0x0f: {/* Fence */
+      uint32_t fm = (instr >> 28) & 0xf;
+      uint32_t pred = (instr >> 24) & 0xf;
+      uint32_t succ = (instr >> 20) & 0xf;
+      /* TODO: FENCE, FENCE.TSO, or PAUSE */
+      } break;
+    case 0x73: /* Environment */
+      /* TODO: ECALL or EBREAK */
+      break;
   };
 
   /* Increment PC */
