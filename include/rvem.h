@@ -199,30 +199,44 @@ static void step(rv32i_t *cpu) {
       set_reg(cpu, rd, u_imm + cpu->pc);
       break;
     case 0x6f: /* JAL */
+      incpc = false;
+      set_reg(cpu, rd, cpu->pc + 4);
+      cpu->pc += j_imm;
       break;
     case 0x67:
       if (funct3 == 0) { /* JALR */
+        incpc = false;
+        set_reg(cpu, rd, cpu->pc + 4);
+        cpu->pc = (i_imm + get_reg(cpu, rs1)) & 0xfffffffe;
       } else printf("Invalid instruction!");
       break;
-    case 0x63: /* Conditional branch */
+    case 0x63: {/* Conditional branch */
+      bool branch;
       switch (funct3) {
         case 0: /* BEQ */
+          branch = get_reg(cpu, rs1) == get_reg(cpu, rs2);
           break;
         case 1: /* BNE */
+          branch = get_reg(cpu, rs1) != get_reg(cpu, rs2);
           break;
         case 4: /* BLT */
+          branch = signed32(get_reg(cpu, rs1)) < signed32(get_reg(cpu, rs2));
           break;
         case 5: /* BGE */
+          branch = signed32(get_reg(cpu, rs1)) >= signed32(get_reg(cpu, rs2));
           break;
         case 6: /* BLTU */
+          branch = get_reg(cpu, rs1) < get_reg(cpu, rs2);
           break;
         case 7: /* BGEU */
+          branch = get_reg(cpu, rs1) >= get_reg(cpu, rs2);
           break;
         default:
           printf("Invalid instruction!");
           break;
       };
-      break;
+      if (branch) cpu->pc += b_imm;
+      } break;
     case 0x03: /* Load */
       switch (funct3) {
         case 0: /* LB */
