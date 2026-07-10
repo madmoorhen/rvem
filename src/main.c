@@ -16,9 +16,7 @@ int main(int argc, char *argv[]) {
   reset(&cpu);
 
   /* Main loop */
-  while (getchar() != 'q') {
-    step(&cpu);
-  }
+  while (getchar() != 'q') step(&cpu);
 
   /* Cleanup */
   destroy(&cpu);

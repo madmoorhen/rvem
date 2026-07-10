@@ -6,6 +6,7 @@
 
 /* Includes */
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -151,7 +152,41 @@ static void reset(rv32i_t *cpu) {
 /* Step the processor */
 static void step(rv32i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to step");
-  /* TODO */
+  
+  /* Fetch */
+  uint32_t instr = get_mem_32(cpu, cpu->pc);
+
+  /* Decode */
+  uint8_t opcode = instr & 0x7f;
+  uint8_t rd = (instr >> 7) & 0x1f;
+  uint8_t rs1 = (instr >> 15) & 0x1f;
+  uint8_t rs2 = (instr >> 20) & 0x1f;
+  uint8_t funct3 = (instr >> 12) & 0x7;
+  uint8_t funct7 = (instr >> 25) & 0x7f;
+  uint32_t i_imm = ((instr >> 20) & 0x7ff) | ((instr >> 31)*0xfffff800);
+  uint32_t s_imm = ((instr >> 7) & 0x1f)
+      | ((instr >> 25) & 0x7f)
+      | ((instr >> 31)*0xfffff000);
+  uint32_t b_imm = ((instr >> 7) & 0x1e)
+      | ((instr << 4) & 0x800)
+      | ((instr >> 31)*0xffffe000);
+  uint32_t u_imm = (instr & 0xfffff000);
+  uint32_t j_imm = (instr & 0xff000)
+      | ((instr >> 9) & 0x800)
+      | ((instr >> 20) & 0x7fe)
+      | ((instr >> 31)*0xfff00000);
+
+  /* NOTE/TODO: For jumps and branches, incpc = false */
+  /* NOTE/TODO: For jumps and branches, ialign should be checked */
+
+  /* Execute */
+  bool incpc = true;
+  switch (opcode) {
+    /* TODO */
+  };
+
+  /* Increment PC */
+  if (incpc) cpu->pc += 4;
 }
 
 /* Initialise the processor structure */
