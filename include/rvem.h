@@ -175,7 +175,7 @@ static void step(rv32i_t *cpu) {
   uint8_t funct7 = (instr >> 25) & 0x7f;
   uint32_t i_imm = ((instr >> 20) & 0x7ff) | ((instr >> 31)*0xfffff800);
   uint32_t s_imm = ((instr >> 7) & 0x1f)
-      | ((instr >> 25) & 0x7f)
+      | ((instr >> 20) & 0x7e0)
       | ((instr >> 31)*0xfffff800);
   uint32_t b_imm = ((instr >> 7) & 0x3e)
       | ((instr >> 20) & 0x7e0)
