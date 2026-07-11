@@ -237,36 +237,48 @@ static void step(rv32i_t *cpu) {
         incpc = false;
       }
       } break;
-    case 0x03: /* Load */
+    case 0x03: { /* Load */
+      uint32_t addr = get_reg(cpu, rs1) + i_imm;
       switch (funct3) {
-        case 0: /* LB */
-          break;
-        case 1: /* LH */
-          break;
+        case 0: { /* LB */
+          uint8_t val = get_mem_8(cpu, addr);
+          set_reg(cpu, rd, val | (0xffffff00*(val>>7)));
+          } break;
+        case 1: { /* LH */
+          uint16_t val = get_mem_16(cpu, addr);
+          set_reg(cpu, rd, val | (0xffff0000*(val>>15)));
+          } break;
         case 2: /* LW */
+          set_reg(cpu, rd, get_mem_32(cpu, addr));
           break;
         case 4: /* LBU */
+          set_reg(cpu, rd, get_mem_8(cpu, addr));
           break;
         case 5: /* LHU */
+          set_reg(cpu, rd, get_mem_16(cpu, addr));
           break;
         default:
           printf("Invalid instruction!");
           break;
       };
-      break;
-    case 0x23: /* Store */
+      } break;
+    case 0x23: {/* Store */
+      uint32_t addr = get_reg(cpu, rs1) + i_imm;
       switch (funct3) {
         case 0: /* SB */
+          set_mem_8(cpu, addr, (uint8_t)(get_reg(cpu, rs2)&0xff));
           break;
         case 1: /* SH */
+          set_mem_16(cpu, addr, (uint16_t)(get_reg(cpu, rs2)&0xffff));
           break;
         case 2: /* SW */
+          set_mem_32(cpu, addr, get_reg(cpu, rs2));
           break;
         default:
           printf("Invalid instruction!");
           break;
       };
-      break;
+      } break;
     case 0x13: /* Arithmetic rs1, imm -> rd */
       switch (funct3) {
         case 0: /* ADDI */
@@ -372,10 +384,12 @@ static void step(rv32i_t *cpu) {
       uint32_t fm = (instr >> 28) & 0xf;
       uint32_t pred = (instr >> 24) & 0xf;
       uint32_t succ = (instr >> 20) & 0xf;
-      /* TODO: FENCE, FENCE.TSO, or PAUSE */
+      /* NOTE: FENCE here, but acts as NOP (ordering already guaranteed) */
+      /* NOTE: FENCE.TSO here, but acts as NOP (ordering already guaranteed) */
+      /* NOTE: PAUSE here, but acts as NOP (HINT) */
       } break;
     case 0x73: /* Environment */
-      /* TODO: ECALL or EBREAK */
+      /* TODO: ECALL and EBREAK */
       break;
     default:
       printf("Invalid instruction!");
