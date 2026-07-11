@@ -176,10 +176,11 @@ static void step(rv32i_t *cpu) {
   uint32_t i_imm = ((instr >> 20) & 0x7ff) | ((instr >> 31)*0xfffff800);
   uint32_t s_imm = ((instr >> 7) & 0x1f)
       | ((instr >> 25) & 0x7f)
-      | ((instr >> 31)*0xfffff000);
-  uint32_t b_imm = ((instr >> 7) & 0x1e)
+      | ((instr >> 31)*0xfffff800);
+  uint32_t b_imm = ((instr >> 7) & 0x3e)
+      | ((instr >> 20) & 0x7e0)
       | ((instr << 4) & 0x800)
-      | ((instr >> 31)*0xffffe000);
+      | ((instr >> 31)*0xfffff000);
   uint32_t u_imm = (instr & 0xfffff000);
   uint32_t j_imm = (instr & 0xff000)
       | ((instr >> 9) & 0x800)
@@ -205,7 +206,7 @@ static void step(rv32i_t *cpu) {
         incpc = false;
         set_reg(cpu, rd, cpu->pc + 4);
         cpu->pc = (i_imm + get_reg(cpu, rs1)) & 0xfffffffe;
-      } else printf("Invalid instruction!");
+      } else printf("Invalid instruction!\n");
       break;
     case 0x63: {/* Conditional branch */
       bool branch;
@@ -229,7 +230,7 @@ static void step(rv32i_t *cpu) {
           branch = get_reg(cpu, rs1) >= get_reg(cpu, rs2);
           break;
         default:
-          printf("Invalid instruction!");
+          printf("Invalid instruction!\n");
           break;
       };
       if (branch) {
@@ -258,12 +259,12 @@ static void step(rv32i_t *cpu) {
           set_reg(cpu, rd, get_mem_16(cpu, addr));
           break;
         default:
-          printf("Invalid instruction!");
+          printf("Invalid instruction!\n");
           break;
       };
       } break;
     case 0x23: {/* Store */
-      uint32_t addr = get_reg(cpu, rs1) + i_imm;
+      uint32_t addr = get_reg(cpu, rs1) + s_imm;
       switch (funct3) {
         case 0: /* SB */
           set_mem_8(cpu, addr, (uint8_t)(get_reg(cpu, rs2)&0xff));
@@ -275,7 +276,7 @@ static void step(rv32i_t *cpu) {
           set_mem_32(cpu, addr, get_reg(cpu, rs2));
           break;
         default:
-          printf("Invalid instruction!");
+          printf("Invalid instruction!\n");
           break;
       };
       } break;
@@ -314,11 +315,11 @@ static void step(rv32i_t *cpu) {
               );
               break;
             default:
-              printf("Invalid instruction!");
+              printf("Invalid instruction!\n");
               break;
           } break;
         default:
-          printf("Invalid instruction!");
+          printf("Invalid instruction!\n");
           break;
       };
       break;
@@ -333,7 +334,7 @@ static void step(rv32i_t *cpu) {
               set_reg(cpu, rd, get_reg(cpu, rs1) + ~(get_reg(cpu, rs2)) + 1);
               break;
             default:
-              printf("Invalid instruction!");
+              printf("Invalid instruction!\n");
               break;
           };
           break;
@@ -365,7 +366,7 @@ static void step(rv32i_t *cpu) {
               );
               break;
             default:
-              printf("Invalid instruction!");
+              printf("Invalid instruction!\n");
               break;
           };
           break;
@@ -376,7 +377,7 @@ static void step(rv32i_t *cpu) {
           set_reg(cpu, rd, get_reg(cpu, rs1) & get_reg(cpu, rs2));
           break;
         default:
-          printf("Invalid instruction!");
+          printf("Invalid instruction!\n");
           break;
       };
       break;
@@ -392,7 +393,7 @@ static void step(rv32i_t *cpu) {
       /* TODO: ECALL and EBREAK */
       break;
     default:
-      printf("Invalid instruction!");
+      printf("Invalid instruction!\n");
       break;
   };
 
