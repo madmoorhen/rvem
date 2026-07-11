@@ -186,9 +186,6 @@ static void step(rv32i_t *cpu) {
       | ((instr >> 20) & 0x7fe)
       | ((instr >> 31)*0xfff00000);
 
-  /* NOTE/TODO: For jumps and branches, incpc = false */
-  /* NOTE/TODO: For jumps and branches, ialign should be checked */
-
   /* Execute */
   bool incpc = true;
   switch (opcode) {
@@ -235,7 +232,10 @@ static void step(rv32i_t *cpu) {
           printf("Invalid instruction!");
           break;
       };
-      if (branch) cpu->pc += b_imm;
+      if (branch) {
+        cpu->pc += b_imm;
+        incpc = false;
+      }
       } break;
     case 0x03: /* Load */
       switch (funct3) {
