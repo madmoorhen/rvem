@@ -1,50 +1,9 @@
 /* Includes */
 #include <rvem.h>
-
-const uint8_t program[] = {
-  0x17, 0x05, 0x00, 0x00,
-  0x13, 0x05, 0x05, 0x02,
-  0x37, 0x06, 0x00, 0x09,
-  0x83, 0x45, 0x05, 0x00,
-  0x23, 0x20, 0xb6, 0x00,
-  0x13, 0x05, 0x15, 0x00,
-  0xe3, 0x9a, 0x05, 0xfe,
-  0x6f, 0x00, 0x20, 0x01,
-  0x48, 0x65, 0x6c, 0x6c,
-  0x6f, 0x20, 0x57, 0x6f,
-  0x72, 0x6c, 0x64, 0x0a,
-  0x00, 0x00
-};
+#include <stdio.h>
 
 /* Entry point */
 int main(int argc, char *argv[]) {
-  rv32i_t cpu;
-
-  /* Initialise cpu */
-  init(&cpu);
-
-  /* Initialise memory */
-  uint8_t *mem = malloc(0x1000);
-  uint8_t *uart = malloc(4);
-  for (size_t i = 0; i < sizeof(program); i++) mem[i] = program[i];
-  add_region(&cpu, 0x00000000, 0x1000, mem);
-  add_region(&cpu, 0x9000000, 4, uart);
-
-  /* Reset */
-  reset(&cpu);
-
-  /* Main loop */
-  //while (getchar() != 'q') {
-  for (size_t i = 0; i < 50; i++) {
-    uart[0] = 0;
-    step(&cpu);
-    if (uart[0]) printf("%c", uart[0]);
-  }
-  printf("\n");
-
-  /* Cleanup */
-  destroy(&cpu);
-  free(mem);
-  free(uart);
+  printf("test\n");
   return 0;
 }
