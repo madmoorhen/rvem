@@ -74,7 +74,15 @@ void rv32i_dump_state(rv32i_t *cpu) {
   }
 }
 /* Dump the memory at a location to the console */
-void rv32i_dump_mem(rv32i_t *cpu, uint32_t addr, uint32_t size);
+void rv32i_dump_mem(rv32i_t *cpu, uint32_t addr, uint32_t size) {
+  ASSERT(cpu, "NULL passed as cpu to rv32i_dump_mem");
+  printf("memory (%d bytes, starting at 0x%08x):\n", size, addr);
+  for (uint32_t i = 0; i < size; i++)
+    printf(
+      "0x%02x%c", rv32i_getb(cpu, addr+i), i % 4 == 3 ? '\n' : ' '
+    );
+  if (size % 4 != 0) printf("\n");
+}
 
 /* Get the value of a register */
 uint32_t rv32i_get_reg(rv32i_t *cpu, uint8_t reg) {
@@ -92,19 +100,58 @@ void rv32i_set_reg(rv32i_t *cpu, uint8_t reg, uint32_t val) {
 }
 
 /* Get a byte from memory */
-uint8_t rv32i_getb(rv32i_t *cpu, uint32_t addr);
+uint8_t rv32i_getb(rv32i_t *cpu, uint32_t addr) {
+  ASSERT(cpu, "NULL passed as cpu to rv32i_getb");
+  ASSERT(cpu->regions, "rv32i_getb called on cpu with no regions");
+  memory_region_t *r = cpu->regions;
+  while (r) {
+    if (r->addr <= addr && r->addr + r->size > addr)
+      return r->data[addr - r->addr];
+    r = r->next;
+  }
+  printf("rv32i_getb called on addr 0x%08x, which isn't mapped", addr);
+  return 0;
+}
 /* Get a half word from memory */
-uint16_t rv32i_geth(rv32i_t *cpu, uint32_t addr);
+uint16_t rv32i_geth(rv32i_t *cpu, uint32_t addr) {
+  return (uint16_t)rv32i_getb(cpu, addr)
+      | (((uint16_t)rv32i_getb(cpu, addr+1)) << 8);
+}
 /* Get a word from memory */
-uint32_t rv32i_getw(rv32i_t *cpu, uint32_t addr);
+uint32_t rv32i_getw(rv32i_t *cpu, uint32_t addr) {
+  return (uint32_t)rv32i_getb(cpu, addr)
+      | (((uint32_t)rv32i_getb(cpu, addr+1)) << 8)
+      | (((uint32_t)rv32i_getb(cpu, addr+2)) << 16)
+      | (((uint32_t)rv32i_getb(cpu, addr+3)) << 24);
+}
 /* Set a byte to memory */
-void rv32i_setb(rv32i_t *cpu, uint32_t addr, uint8_t val);
+void rv32i_setb(rv32i_t *cpu, uint32_t addr, uint8_t val) {
+  ASSERT(cpu, "NULL passed as cpu to rv32i_setb");
+  ASSERT(cpu->regions, "rv32i_setb called on cpu with no regions");
+  memory_region_t *r = cpu->regions;
+  while (r) {
+    if (r->addr <= addr && r->addr + r->size > addr) {
+      r->data[addr - r->addr] = val;
+      return;
+    }
+    r = r->next;
+  }
+  printf("rv32i_setb called on addr 0x%08x, which isn't mapped", addr);
+}
 /* Set a half word to memory */
-void rv32i_seth(rv32i_t *cpu, uint32_t addr, uint16_t val);
+void rv32i_seth(rv32i_t *cpu, uint32_t addr, uint16_t val) {
+  rv32i_setb(cpu, addr, (uint8_t)(val & 0xff));
+  rv32i_setb(cpu, addr+1, (uint8_t)((val >> 8) & 0xff));
+}
 /* Set a word to memory */
-void rv32i_setw(rv32i_t *cpu, uint32_t addr, uint32_t val);
+void rv32i_setw(rv32i_t *cpu, uint32_t addr, uint32_t val) {
+  rv32i_setb(cpu, addr, (uint8_t)(val & 0xff));
+  rv32i_setb(cpu, addr+1, (uint8_t)((val >> 8) & 0xff));
+  rv32i_setb(cpu, addr+2, (uint8_t)((val >> 16) & 0xff));
+  rv32i_setb(cpu, addr+3, (uint8_t)((val >> 24) & 0xff));
+}
 
 /* Reset the processor */
 void rv32i_reset(rv32i_t *cpu);
 /* Step the processor */
-void rv32i_step(rv32i_t *cpu);
+void rv32i_step(rv32i_t *cpu, bool verbose);

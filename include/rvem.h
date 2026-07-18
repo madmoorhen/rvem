@@ -63,6 +63,6 @@ extern void rv32i_setw(rv32i_t *cpu, uint32_t addr, uint32_t val);
 /* Reset the processor */
 extern void rv32i_reset(rv32i_t *cpu);
 /* Step the processor */
-extern void rv32i_step(rv32i_t *cpu);
+extern void rv32i_step(rv32i_t *cpu, bool verbose);
 
 #endif /* RVEM_H */

@@ -34,28 +34,25 @@ int main(int argc, char *argv[]) {
   };
   rv32i_add_region(&cpu, &mem_region);
 
-  rv32i_dump_state(&cpu);
   rv32i_reset(&cpu);
+  /* Main loop */
   char c = 0;
   while (c != 'q') {
     switch (c) {
-      case 's': rv32i_dumpstate(&cpu); break;
+      case 's': rv32i_dump_state(&cpu); break;
       case 'm': {
-        char *input;
-        size_t input_size;
-        uint32_t addr;
-        uint32_t size;
+        uint32_t addr = 0;
+        uint32_t size = 0;
+
         printf("addr: 0x");
-        ASSERT(getline(&input, &input_size, stdin) > 0, "getline() failed");
-        sscanf(input, "%08x", &addr);
-        free(input);
+        scanf("%8x", &addr);
         printf("size: 0x");
-        ASSERT(getline(&input, &input_size, stdin) > 0, "getline() failed");
-        sscanf(input, "%08x", &size);
-        free(input);
-        rv32i_dumpmem(&cpu, addr, size);
+        scanf("%8x", &size);
+
+        rv32i_dump_mem(&cpu, addr, size);
       } break;
-      default: rv32i_step(&cpu); break;
+      case 'v': rv32i_step(&cpu, true); break;
+      default: rv32i_step(&cpu, false); break;
     };
     c = getchar();
   }
