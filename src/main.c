@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
   };
   rv32i_add_region(&cpu, &mem_region);
 
+  rv32i_dump_state(&cpu);
   rv32i_reset(&cpu);
   char c = 0;
   while (c != 'q') {

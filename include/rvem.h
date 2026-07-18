@@ -24,9 +24,9 @@ typedef struct {
 
 /* Processor state */
 typedef struct {
-  uint32_t x[32];
+  uint32_t x[31];
   uint32_t pc;
-  memory_region_t regions;
+  memory_region_t *regions;
 } rv32i_t;
 
 /* Initialise the processor */
@@ -38,9 +38,9 @@ extern void rv32i_add_region(rv32i_t *cpu, memory_region_t *region);
 extern void rv32i_remove_region(rv32i_t *cpu, memory_region_t *region);
 
 /* Dump the processor state to the console */
-extern void rv32i_dumpstate(rv32i_t *cpu);
+extern void rv32i_dump_state(rv32i_t *cpu);
 /* Dump the memory at a location to the console */
-extern void rv32i_dumpmem(rv32i_t *cpu, uint32_t addr, uint32_t size);
+extern void rv32i_dump_mem(rv32i_t *cpu, uint32_t addr, uint32_t size);
 
 /* Get the value of a register */
 extern uint32_t rv32i_get_reg(rv32i_t *cpu, uint8_t reg);
