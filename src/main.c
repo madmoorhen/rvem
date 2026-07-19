@@ -15,7 +15,8 @@
 
 /* Program */
 const uint8_t program[] = {
-  0x10, 0x20, 0x30, 0x40
+  0x13, 0x01, 0x50, 0x00,
+  0x93, 0x00, 0x41, 0x01
 };
 
 /* Entry point */
@@ -36,8 +37,9 @@ int main(int argc, char *argv[]) {
 
   rv32i_reset(&cpu);
   /* Main loop */
-  char c = 0;
+  char c = getchar();
   while (c != 'q') {
+    if (c != '\n') getchar();
     switch (c) {
       case 'h':
         printf(

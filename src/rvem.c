@@ -184,45 +184,69 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       | ((instr >> 9) & 0x800)
       | ((instr >> 20) & 0x7fe)
       | ((instr >> 31)*0xfff00000);
-  
-  /* For verbose output */
-#define R_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, x%d, x%d\n",\
-    rd, rs1, rs2\
-)
-#define I_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, x%d, 0x%08x\n",\
-    rd, rs1, i_imm\
-)
-#define S_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, 0x%08x(x%d)\n",\
-    rs2, s_imm, rs1\
-)
-#define B_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, x%d, 0x%08x\n",\
-    rs1, rs2, b_imm\
-)
-#define U_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, 0x%08x\n",\
-    rd, u_imm\
-)
-#define J_INSTR(mneumonic) if (verbose) printf(\
-    mneumonic " x%d, 0x%08x\n",\
-    rd, j_imm\
-)
 
   /* TODO: set incpc false for successful branches and jumps */
   /* TODO: verbose output on successful branches and jumps */
 
   /* Execute */
   bool incpc = true;
+#define UNRECOGNIZED printf("Unrecognised instruction!")
   switch (opcode) {
+    case 0x13: {/* Arithmetic with immediate */
+      const char *mneumonic = NULL;
+      bool shift = false;
+      uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
+      uint32_t res = 0;
+      switch (funct3) {
+        case 0:
+          mneumonic = "add";
+          res = rs1_val + i_imm;
+          break;
+        case 2:
+          mneumonic = "slti";
+          res = signedw(rs1_val) < signedw(i_imm);
+          break;
+        case 3:
+          mneumonic = "sltiu";
+          res = rs1_val < i_imm;
+          break;
+        case 4:
+          mneumonic = "xori";
+          res = rs1_val ^ i_imm;
+          break;
+        case 6:
+          mneumonic = "ori";
+          res = rs1_val | i_imm;
+          break;
+        case 7:
+          mneumonic = "andi";
+          res = rs1_val & i_imm;
+          break;
+        case 1:
+          mneumonic = "slli";
+          res = rs1_val << rs2;
+          shift = true;
+          break;
+        case 5:
+          res = rs1_val >> rs2;
+          shift = true;
+          if (funct7 == 0) mneumonic = "srli";
+          else if (funct7 == 0x20) {
+            mneumonic = "srai";
+            if (rs1_val & 0x80000000) res |= 0x80000000;
+          } else UNRECOGNIZED;
+          break;
+        default: UNRECOGNIZED; break;
+      };
+      rv32i_set_reg(cpu, rd, res);
+      if (verbose) printf(
+            shift ? "%s x%d, x%d, 0x%05x\n" : "%s x%d, x%d, 0x%08x\n",
+            mneumonic, rd, rs1, shift ? rs2 : i_imm
+        );
+      } break;
+    default: UNRECOGNIZED; break;
   };
 
-#undef R_INSTR
-#undef I_INSTR
-#undef S_INSTR
-#undef B_INSTR
-#undef U_INSTR
-#undef J_INSTR
+  /* Increment program counter */
+  if (incpc) cpu->pc += 4;
 }
