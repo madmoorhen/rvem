@@ -188,9 +188,15 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
   /* TODO: set incpc false for successful branches and jumps */
   /* TODO: verbose output on successful branches and jumps */
 
+  /* Unrecognized instructions */
+#define UNRECOGNIZED do {\
+  printf("Unrecognised instruction!\n");\
+  cpu->pc += 4;\
+  return;\
+} while (0)
+
   /* Execute */
   bool incpc = true;
-#define UNRECOGNIZED printf("Unrecognised instruction!")
   switch (opcode) {
     case 0x13: {/* Arithmetic with immediate */
       const char *mneumonic = NULL;
