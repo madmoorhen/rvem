@@ -4,13 +4,13 @@
 /*
  * TESTED:
  * - addi
- * IMPLEMENTED:
  * - slti
  * - sltiu 
  * - xori 
  * - ori 
  * - andi 
  * - slli 
+ * IMPLEMENTED:
  * - srli 
  * - srai 
  */
