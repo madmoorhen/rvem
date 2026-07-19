@@ -2,7 +2,6 @@
 #include <rvem.h>
 
 /* Includes */
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -152,6 +151,11 @@ void rv32i_setw(rv32i_t *cpu, uint32_t addr, uint32_t val) {
 }
 
 /* Reset the processor */
-void rv32i_reset(rv32i_t *cpu);
+void rv32i_reset(rv32i_t *cpu) {
+  ASSERT(cpu, "NULL passed as cpu to rv32i_reset");
+  for (uint8_t i = 0; i < 32; i++) rv32i_set_reg(cpu, i, 0);
+  cpu->pc = 0;
+  printf("reset ocurred\n");
+}
 /* Step the processor */
 void rv32i_step(rv32i_t *cpu, bool verbose);

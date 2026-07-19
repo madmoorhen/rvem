@@ -39,6 +39,19 @@ int main(int argc, char *argv[]) {
   char c = 0;
   while (c != 'q') {
     switch (c) {
+      case 'h':
+        printf(
+          "q:\t\tquit\n"
+          "h:\t\thelp\n"
+          "r:\t\treset\n"
+          "s:\t\tdump processor state\n"
+          "m:\t\tdump memory contents (specific region)\n"
+          "n:\t\tstep n times (-1 for indefinitely)\n"
+          "v:\t\tstep once (verbose)\n"
+          "nothing:\tstep once (quiet)\n"
+        );
+        break;
+      case 'r': rv32i_reset(&cpu); break;
       case 's': rv32i_dump_state(&cpu); break;
       case 'm': {
         uint32_t addr = 0;
@@ -50,6 +63,22 @@ int main(int argc, char *argv[]) {
         scanf("%8x", &size);
 
         rv32i_dump_mem(&cpu, addr, size);
+      } break;
+      case 'n': {
+        int num_cycles;
+        char verbose;
+        printf("num_cycles: ");
+        scanf("%d", &num_cycles);
+        printf("verbose(y/n): ");
+        getchar();
+        verbose = getchar();
+        printf("%d cycles\n", num_cycles);
+        if (cycles <= 0) {
+          while (1) rv32i_step(&cpu, verbose != 'n' && verbose != 'N');
+        } else {
+          for (int i = 0; i < num_cycles; i++)
+            rv32i_step(&cpu, verbose != 'n' && verbose != 'N');
+        }
       } break;
       case 'v': rv32i_step(&cpu, true); break;
       default: rv32i_step(&cpu, false); break;

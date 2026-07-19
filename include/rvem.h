@@ -13,6 +13,7 @@
 
 /* Includes */
 #include <stdint.h>
+#include <stdbool.h>
 
 /* Memory region */
 typedef struct {
