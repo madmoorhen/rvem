@@ -1,6 +1,20 @@
 /* Implements rvem.h */
 #include <rvem.h>
 
+/*
+ * TESTED:
+ * - addi
+ * IMPLEMENTED:
+ * - slti
+ * - sltiu 
+ * - xori 
+ * - ori 
+ * - andi 
+ * - slli 
+ * - srli 
+ * - srai 
+ */
+
 /* Includes */
 #include <stdlib.h>
 #include <stdio.h>
