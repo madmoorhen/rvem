@@ -158,4 +158,71 @@ void rv32i_reset(rv32i_t *cpu) {
   printf("reset ocurred\n");
 }
 /* Step the processor */
-void rv32i_step(rv32i_t *cpu, bool verbose);
+void rv32i_step(rv32i_t *cpu, bool verbose) {
+  ASSERT(cpu, "NULL passed as cpu to rv32i_step");
+
+  /* Fetch */
+  uint32_t instr = rv32i_getw(cpu, cpu->pc);
+
+  /* Decode */
+  uint8_t opcode = instr & 0x7f;
+  uint8_t rd = (instr >> 7) & 0x1f;
+  uint8_t rs1 = (instr >> 15) & 0x1f;
+  uint8_t rs2 = (instr >> 20) & 0x1f;
+  uint8_t funct3 = (instr >> 12) & 0x7;
+  uint8_t funct7 = (instr >> 25) & 0x7f;
+  uint32_t i_imm = ((instr >> 20) & 0x7ff) | ((instr >> 31)*0xfffff800);
+  uint32_t s_imm = ((instr >> 7) & 0x1f)
+      | ((instr >> 20) & 0x7e0)
+      | ((instr >> 31)*0xfffff800);
+  uint32_t b_imm = ((instr >> 7) & 0x3e)
+      | ((instr >> 20) & 0x7e0)
+      | ((instr << 4) & 0x800)
+      | ((instr >> 31)*0xfffff000);
+  uint32_t u_imm = (instr & 0xfffff000);
+  uint32_t j_imm = (instr & 0xff000)
+      | ((instr >> 9) & 0x800)
+      | ((instr >> 20) & 0x7fe)
+      | ((instr >> 31)*0xfff00000);
+  
+  /* For verbose output */
+#define R_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, x%d, x%d\n",\
+    rd, rs1, rs2\
+)
+#define I_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, x%d, 0x%08x\n",\
+    rd, rs1, i_imm\
+)
+#define S_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, 0x%08x(x%d)\n",\
+    rs2, s_imm, rs1\
+)
+#define B_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, x%d, 0x%08x\n",\
+    rs1, rs2, b_imm\
+)
+#define U_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, 0x%08x\n",\
+    rd, u_imm\
+)
+#define J_INSTR(mneumonic) if (verbose) printf(\
+    mneumonic " x%d, 0x%08x\n",\
+    rd, j_imm\
+)
+
+  /* TODO: set incpc false for successful branches and jumps */
+  /* TODO: verbose output on successful branches and jumps */
+
+  /* Execute */
+  bool incpc = true;
+  switch (opcode) {
+  };
+
+#undef R_INSTR
+#undef I_INSTR
+#undef S_INSTR
+#undef B_INSTR
+#undef U_INSTR
+#undef J_INSTR
+}

@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         getchar();
         verbose = getchar();
         printf("%d cycles\n", num_cycles);
-        if (cycles <= 0) {
+        if (num_cycles <= 0) {
           while (1) rv32i_step(&cpu, verbose != 'n' && verbose != 'N');
         } else {
           for (int i = 0; i < num_cycles; i++)
