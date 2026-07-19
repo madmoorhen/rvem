@@ -10,9 +10,9 @@
  * - ori 
  * - andi 
  * - slli 
- * IMPLEMENTED:
  * - srli 
  * - srai 
+ * IMPLEMENTED:
  */
 
 /* Includes */
@@ -248,12 +248,13 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
           shift = true;
           break;
         case 5:
-          res = rs1_val >> rs2;
           shift = true;
-          if (funct7 == 0) mneumonic = "srli";
-          else if (funct7 == 0x20) {
+          if (funct7 == 0) {
+            mneumonic = "srli";
+            res = rs1_val >> rs2;
+          } else if (funct7 == 0x20) {
             mneumonic = "srai";
-            if (rs1_val & 0x80000000) res |= 0x80000000;
+            res = (uint32_t)(signedw(rs1_val) >> rs2);
           } else UNRECOGNIZED;
           break;
         default: UNRECOGNIZED; break;
