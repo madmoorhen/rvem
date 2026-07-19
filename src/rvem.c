@@ -12,6 +12,8 @@
  * - slli 
  * - srli 
  * - srai 
+ * - lui
+ * - auipc
  * IMPLEMENTED:
  */
 
@@ -212,7 +214,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
   /* Execute */
   bool incpc = true;
   switch (opcode) {
-    case 0x13: {/* Arithmetic with immediate */
+    case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
       bool shift = false;
       uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
@@ -265,6 +267,14 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
             mneumonic, rd, rs1, shift ? rs2 : i_imm
         );
       } break;
+    case 0x37: /* LUI */
+      rv32i_set_reg(cpu, rd, u_imm);
+      printf("lui x%d, 0x%08x\n", rd, u_imm);
+      break;
+    case 0x17: /* AUIPC */
+      rv32i_set_reg(cpu, rd, u_imm + cpu->pc);
+      printf("auipc x%d, 0x%08x\n", rd, u_imm);
+      break;
     default: UNRECOGNIZED; break;
   };
 
