@@ -269,11 +269,11 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       } break;
     case 0x37: /* LUI */
       rv32i_set_reg(cpu, rd, u_imm);
-      printf("lui x%d, 0x%08x\n", rd, u_imm);
+      if (verbose) printf("lui x%d, 0x%08x\n", rd, u_imm);
       break;
     case 0x17: /* AUIPC */
       rv32i_set_reg(cpu, rd, u_imm + cpu->pc);
-      printf("auipc x%d, 0x%08x\n", rd, u_imm);
+      if (verbose) printf("auipc x%d, 0x%08x\n", rd, u_imm);
       break;
     default: UNRECOGNIZED; break;
   };
