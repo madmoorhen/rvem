@@ -17,6 +17,9 @@
  * - add
  * - sub
  * IMPLEMENTED:
+ * - sll
+ * - slt
+ * - sltu
  */
 
 /* Includes */
@@ -298,6 +301,31 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
               mneumonic = "sub";
               res = rs1_val + ~rs2_val + 1;
               break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 1:
+          switch (funct7) {
+            case 0:
+              mneumonic = "sll";
+              res = rs1_val << shamt;
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 2:
+          switch (funct7) {
+            case 0:
+              mneumonic = "slt";
+              res = signedw(rs1_val) < signedw(rs2_val);
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 3:
+          switch (funct7) {
+            case 0:
+              mneumonic = "sltu";
+              res = rs1_val < rs2_val;
+              break;
+            default: UNRECOGNISED; break;
           }; break;
         default: UNRECOGNISED; break;
       };
