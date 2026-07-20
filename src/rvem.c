@@ -284,7 +284,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
             mneumonic, rd, rs1, shift ? rs2 : i_imm
         );
     } break;
-    case 0x33: {
+    case 0x33: { /* Arithmetic with registers */
       const char *mneumonic = NULL;
       uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
       uint32_t rs2_val = rv32i_get_reg(cpu, rs2);
