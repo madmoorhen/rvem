@@ -20,6 +20,9 @@
  * - sll
  * - slt
  * - sltu
+ * - xor
+ * - srl
+ * - sra
  */
 
 /* Includes */
@@ -36,6 +39,8 @@
 
 /* Signed value from unsigned (reinterpret) */
 static int32_t signedw(uint32_t val) { return *((int32_t *)(&val)); }
+/* Unsigned value from signed (reinterpret) */
+static uint32_t unsignedw(int32_t val) { return *((uint32_t *)(&val)); }
 
 /* Initialise the processor */
 void rv32i_init(rv32i_t *cpu) {
@@ -272,7 +277,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
               break;
             case 0x20:
               mneumonic = "srai";
-              res = (uint32_t)(signedw(rs1_val) >> shamt);
+              res = unsignedw(signedw(rs1_val) >> shamt);
               break;
             default: UNRECOGNISED; break;
           }; break;
@@ -324,6 +329,26 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
             case 0:
               mneumonic = "sltu";
               res = rs1_val < rs2_val;
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 4:
+          switch (funct7) {
+            case 0:
+              mneumonic = "xor";
+              res = rs1_val ^ rs2_val;
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 5:
+          switch (funct7) {
+            case 0:
+              mneumonic = "srl";
+              res = rs1_val >> shamt;
+              break;
+            case 0x20:
+              mneumonic = "sra";
+              res = unsignedw(signedw(rs1_val) >> shamt);
               break;
             default: UNRECOGNISED; break;
           }; break;
