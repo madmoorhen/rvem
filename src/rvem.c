@@ -218,6 +218,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       const char *mneumonic = NULL;
       bool shift = false;
       uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
+      uint8_t shamt = i_imm & 0x1f;
       uint32_t res = 0;
       switch (funct3) {
         case 0:
@@ -246,17 +247,17 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
           break;
         case 1:
           mneumonic = "slli";
-          res = rs1_val << rs2;
+          res = rs1_val << shamt;
           shift = true;
           break;
         case 5:
           shift = true;
           if (funct7 == 0) {
             mneumonic = "srli";
-            res = rs1_val >> rs2;
+            res = rs1_val >> shamt;
           } else if (funct7 == 0x20) {
             mneumonic = "srai";
-            res = (uint32_t)(signedw(rs1_val) >> rs2);
+            res = (uint32_t)(signedw(rs1_val) >> shamt);
           } else UNRECOGNIZED;
           break;
         default: UNRECOGNIZED; break;
