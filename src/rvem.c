@@ -205,7 +205,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
   /* TODO: verbose output on successful branches and jumps */
 
   /* Unrecognized instructions */
-#define UNRECOGNIZED do {\
+#define UNRECOGNISED do {\
   printf("Unrecognised instruction!\n");\
   cpu->pc += 4;\
   return;\
@@ -214,6 +214,14 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
   /* Execute */
   bool incpc = true;
   switch (opcode) {
+    case 0x37: /* LUI */
+      rv32i_set_reg(cpu, rd, u_imm);
+      if (verbose) printf("lui x%d, 0x%08x\n", rd, u_imm);
+      break;
+    case 0x17: /* AUIPC */
+      rv32i_set_reg(cpu, rd, u_imm + cpu->pc);
+      if (verbose) printf("auipc x%d, 0x%08x\n", rd, u_imm);
+      break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
       bool shift = false;
@@ -252,31 +260,40 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
           break;
         case 5:
           shift = true;
-          if (funct7 == 0) {
-            mneumonic = "srli";
-            res = rs1_val >> shamt;
-          } else if (funct7 == 0x20) {
-            mneumonic = "srai";
-            res = (uint32_t)(signedw(rs1_val) >> shamt);
-          } else UNRECOGNIZED;
+          switch (funct7) {
+            case 0:
+              mneumonic = "srli";
+              res = rs1_val >> shamt;
+              break;
+            case 0x20:
+              mneumonic = "srai";
+              res = (uint32_t)(signedw(rs1_val) >> shamt);
+              break;
+            default: UNRECOGNISED; break;
+          };
           break;
-        default: UNRECOGNIZED; break;
+        default: UNRECOGNISED; break;
       };
       rv32i_set_reg(cpu, rd, res);
       if (verbose) printf(
             shift ? "%s x%d, x%d, 0x%05x\n" : "%s x%d, x%d, 0x%08x\n",
             mneumonic, rd, rs1, shift ? rs2 : i_imm
         );
-      } break;
-    case 0x37: /* LUI */
-      rv32i_set_reg(cpu, rd, u_imm);
-      if (verbose) printf("lui x%d, 0x%08x\n", rd, u_imm);
-      break;
-    case 0x17: /* AUIPC */
-      rv32i_set_reg(cpu, rd, u_imm + cpu->pc);
-      if (verbose) printf("auipc x%d, 0x%08x\n", rd, u_imm);
-      break;
-    default: UNRECOGNIZED; break;
+    } break;
+    case 0x33: {
+      const char *mneumonic = NULL;
+      uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
+      uint32_t rs2_val = rv32i_get_reg(cpu, rs2);
+      uint8_t shamt = rs2_val & 0x1f;
+      uint32_t res = 0;
+      switch (funct3) {
+        /* TODO */
+        default: UNRECOGNISED; break;
+      };
+      rv32i_set_reg(cpu, rd, res);
+      if (verbose) printf("%s x%d, x%d, x%d", mneumonic, rd, rs1, rs2);
+    } break;
+    default: UNRECOGNISED; break;
   };
 
   /* Increment program counter */
