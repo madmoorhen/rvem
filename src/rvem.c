@@ -3,6 +3,8 @@
 
 /*
  * TESTED:
+ * - lui
+ * - auipc
  * - addi
  * - slti
  * - sltiu 
@@ -12,8 +14,8 @@
  * - slli 
  * - srli 
  * - srai 
- * - lui
- * - auipc
+ * - add
+ * - sub
  * IMPLEMENTED:
  */
 
@@ -230,7 +232,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       uint32_t res = 0;
       switch (funct3) {
         case 0:
-          mneumonic = "add";
+          mneumonic = "addi";
           res = rs1_val + i_imm;
           break;
         case 2:
@@ -270,8 +272,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
               res = (uint32_t)(signedw(rs1_val) >> shamt);
               break;
             default: UNRECOGNISED; break;
-          };
-          break;
+          }; break;
         default: UNRECOGNISED; break;
       };
       rv32i_set_reg(cpu, rd, res);
@@ -287,11 +288,21 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       uint8_t shamt = rs2_val & 0x1f;
       uint32_t res = 0;
       switch (funct3) {
-        /* TODO */
+        case 0:
+          switch (funct7) {
+            case 0:
+              mneumonic = "add";
+              res = rs1_val + rs2_val;
+              break;
+            case 0x20:
+              mneumonic = "sub";
+              res = rs1_val + ~rs2_val + 1;
+              break;
+          }; break;
         default: UNRECOGNISED; break;
       };
       rv32i_set_reg(cpu, rd, res);
-      if (verbose) printf("%s x%d, x%d, x%d", mneumonic, rd, rs1, rs2);
+      if (verbose) printf("%s x%d, x%d, x%d\n", mneumonic, rd, rs1, rs2);
     } break;
     default: UNRECOGNISED; break;
   };
