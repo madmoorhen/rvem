@@ -24,6 +24,8 @@
  * - sra
  * - or
  * - and
+ * - jal
+ * - jalr
  * IMPLEMENTED:
  */
 
@@ -233,6 +235,18 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
     case 0x17: /* AUIPC */
       rv32i_set_reg(cpu, rd, u_imm + cpu->pc);
       if (verbose) printf("auipc x%d, 0x%08x\n", rd, u_imm);
+      break;
+    case 0x6f: /* JAL */
+      rv32i_set_reg(cpu, rd, cpu->pc + 4);
+      cpu->pc += j_imm;
+      incpc = false;
+      if (verbose) printf("jal x%d, 0x%08x\n", rd, j_imm);
+      break;
+    case 0x67: /* JALR */
+      rv32i_set_reg(cpu, rd, cpu->pc + 4);
+      cpu->pc = (rv32i_get_reg(cpu, rs1) + i_imm) & 0xfffffffe;
+      incpc = false;
+      if (verbose) printf("jalr x%d, 0x%08x(x%d)\n", rd, i_imm, rs1);
       break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
