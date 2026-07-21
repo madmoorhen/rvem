@@ -23,6 +23,8 @@
  * - xor
  * - srl
  * - sra
+ * - or
+ * - and
  */
 
 /* Includes */
@@ -349,6 +351,22 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
             case 0x20:
               mneumonic = "sra";
               res = unsignedw(signedw(rs1_val) >> shamt);
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 6:
+          switch (funct7) {
+            case 0:
+              mneumonic = "or";
+              res = rs1_val | rs2_val;
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 7:
+          switch (funct7) {
+            case 0:
+              mneumonic = "and";
+              res = rs1_val & rs2_val;
               break;
             default: UNRECOGNISED; break;
           }; break;
