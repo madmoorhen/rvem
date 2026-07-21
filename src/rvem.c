@@ -16,7 +16,6 @@
  * - srai 
  * - add
  * - sub
- * IMPLEMENTED:
  * - sll
  * - slt
  * - sltu
@@ -25,6 +24,7 @@
  * - sra
  * - or
  * - and
+ * IMPLEMENTED:
  */
 
 /* Includes */
