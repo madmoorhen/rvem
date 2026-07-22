@@ -27,6 +27,12 @@
  * - jal
  * - jalr
  * IMPLEMENTED:
+ * - beq
+ * - bne
+ * - blt
+ * - bge
+ * - bltu
+ * - bgeu
  */
 
 /* Includes */
@@ -248,6 +254,44 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       incpc = false;
       if (verbose) printf("jalr x%d, 0x%08x(x%d)\n", rd, i_imm, rs1);
       break;
+    case 0x63: { /* Conditional branch */
+      const char *mneumonic = NULL;
+      bool branch = false;
+      uint32_t rs1_val = rv32i_get_reg(cpu, rs1);
+      uint32_t rs2_val = rv32i_get_reg(cpu, rs2);
+      switch (funct3) {
+        case 0:
+          mneumonic = "beq";
+          branch = rs1_val == rs2_val;
+          break;
+        case 1:
+          mneumonic = "bne";
+          branch = rs1_val != rs2_val;
+          break;
+        case 4:
+          mneumonic = "blt";
+          branch = signedw(rs1_val) < signedw(rs2_val);
+          break;
+        case 5:
+          mneumonic = "bge";
+          branch = signedw(rs1_val) >= signedw(rs2_val);
+          break;
+        case 6:
+          mneumonic = "bltu";
+          branch = rs1_val < rs2_val;
+          break;
+        case 7:
+          mneumonic = "bgeu";
+          branch = rs1_val >= rs2_val;
+          break;
+        default: UNRECOGNISED; break;
+      };
+      if (branch) {
+        cpu->pc += b_imm;
+        incpc = false;
+      }
+      if (verbose) printf("%s x%d, x%d, 0x%08x\n", mneumonic, rs1, rs2, b_imm);
+    } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
       bool shift = false;
