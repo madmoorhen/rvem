@@ -152,7 +152,7 @@ uint8_t rv32i_getb(rv32i_t *cpu, uint32_t addr) {
       return r->data[addr - r->addr];
     r = r->next;
   }
-  printf("rv32i_getb called on addr 0x%08x, which isn't mapped", addr);
+  printf("rv32i_getb called on addr 0x%08x, which isn't mapped\n", addr);
   return 0;
 }
 /* Get a half word from memory */
