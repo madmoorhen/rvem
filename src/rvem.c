@@ -38,6 +38,9 @@
  * - lw
  * - lbu
  * - lhu
+ * - sb
+ * - sh
+ * - sw
  */
 
 /* Includes */
@@ -328,6 +331,27 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       };
       rv32i_set_reg(cpu, rd, res);
       if (verbose) printf("%s x%d, 0x%08x(x%d)\n", mneumonic, rd, i_imm, rs1);
+    } break;
+    case 0x23: { /* Store */
+      const char *mneumonic = NULL;
+      uint32_t addr = s_imm + rv32i_get_reg(cpu, rs1);
+      uint32_t rs2_val = rv32i_get_reg(cpu, rs2);
+      switch (funct3) {
+        case 0:
+          mneumonic = "sb";
+          rv32i_setb(cpu, addr, (uint8_t)(rs2_val & 0xff));
+          break;
+        case 1:
+          mneumonic = "sh";
+          rv32i_seth(cpu, addr, (uint16_t)(rs2_val & 0xffff));
+          break;
+        case 2:
+          mneumonic = "sw";
+          rv32i_setw(cpu, addr, rs2_val);
+          break;
+        default: UNRECOGNISED; break;
+      };
+      if (verbose) printf("%s x%d, 0x%08x(x%d)\n", mneumonic, rs2, s_imm, rs1);
     } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
