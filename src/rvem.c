@@ -33,6 +33,11 @@
  * - bge
  * - bltu
  * - bgeu
+ * - lb
+ * - lh
+ * - lw
+ * - lbu
+ * - lhu
  */
 
 /* Includes */
@@ -291,6 +296,38 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
         incpc = false;
       }
       if (verbose) printf("%s x%d, x%d, 0x%08x\n", mneumonic, rs1, rs2, b_imm);
+    } break;
+    case 0x03: { /* Load */
+      const char* mneumonic = NULL;
+      uint32_t addr = i_imm + rv32i_get_reg(cpu, rs1);
+      uint32_t res = 0;
+      switch (funct3) {
+        case 0:
+          mneumonic = "lb";
+          res = rv32i_getb(cpu, addr);
+          res |= (res >> 7)*0xffffff00;
+          break;
+        case 1:
+          mneumonic = "lh";
+          res = rv32i_geth(cpu, addr);
+          res |= (res >> 15)*0xffff0000;
+          break;
+        case 2:
+          mneumonic = "lw";
+          res = rv32i_getw(cpu, addr);
+          break;
+        case 4:
+          mneumonic = "lbu";
+          res = rv32i_getb(cpu, addr);
+          break;
+        case 5:
+          mneumonic = "lhu";
+          res = rv32i_geth(cpu, addr);
+          break;
+        default: UNRECOGNISED; break;
+      };
+      rv32i_set_reg(cpu, rd, res);
+      if (verbose) printf("%s x%d, 0x%08x(x%d)\n", mneumonic, rd, i_imm, rs1);
     } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
