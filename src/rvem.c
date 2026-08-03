@@ -219,7 +219,7 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
   uint32_t s_imm = ((instr >> 7) & 0x1f)
       | ((instr >> 20) & 0x7e0)
       | ((instr >> 31)*0xfffff800);
-  uint32_t b_imm = ((instr >> 7) & 0x3e)
+  uint32_t b_imm = ((instr >> 7) & 0x1e)
       | ((instr >> 20) & 0x7e0)
       | ((instr << 4) & 0x800)
       | ((instr >> 31)*0xfffff000);
