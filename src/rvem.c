@@ -453,7 +453,35 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       if (verbose) printf("%s x%d, x%d, x%d\n", mneumonic, rd, rs1, rs2);
     } break;
     case 0x0f: /* Fence */
-      if (verbose) printf("Some sort of fence instr.\n");
+      switch (funct3) {
+        case 0:
+          switch (instr) {
+            case 0x8330000f: /* fence.tso */
+              if (verbose) printf("fence.tso\n");
+              break;
+            case 0x0100000f: /* pause */
+              if (verbose) printf("pause\n");
+              break;
+            default: /* fence */
+              if (verbose) printf(
+                    "fence %s%s%s%s, %s%s%s%s\n",
+                    instr & 0x08000000 ? "i" : "",
+                    instr & 0x04000000 ? "o" : "",
+                    instr & 0x02000000 ? "r" : "",
+                    instr & 0x01000000 ? "w" : "",
+                    instr & 0x00800000 ? "i" : "",
+                    instr & 0x00400000 ? "o" : "",
+                    instr & 0x00200000 ? "r" : "",
+                    instr & 0x00100000 ? "w" : ""
+                );
+              break;
+          };
+          break;
+        case 1:
+          if (verbose) printf("fence.i\n");
+          break;
+        default: UNRECOGNISED; break;
+      };
       break;
     case 0x73: /* System instructions */
       switch (instr) {
