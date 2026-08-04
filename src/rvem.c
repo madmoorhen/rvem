@@ -187,9 +187,6 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       | ((instr >> 20) & 0x7fe)
       | ((instr >> 31)*0xfff00000);
 
-  /* TODO: set incpc false for successful branches and jumps */
-  /* TODO: verbose output on successful branches and jumps */
-
   /* Unrecognized instructions */
 #define UNRECOGNISED do {\
   printf("Unrecognised instruction!\n");\
