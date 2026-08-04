@@ -1,48 +1,6 @@
 /* Implements rvem.h */
 #include <rvem.h>
 
-/*
- * TESTED:
- * - lui
- * - auipc
- * - addi
- * - slti
- * - sltiu 
- * - xori 
- * - ori 
- * - andi 
- * - slli 
- * - srli 
- * - srai 
- * - add
- * - sub
- * - sll
- * - slt
- * - sltu
- * - xor
- * - srl
- * - sra
- * - or
- * - and
- * - jal
- * - jalr
- * IMPLEMENTED:
- * - beq
- * - bne
- * - blt
- * - bge
- * - bltu
- * - bgeu
- * - lb
- * - lh
- * - lw
- * - lbu
- * - lhu
- * - sb
- * - sh
- * - sw
- */
-
 /* Includes */
 #include <stdlib.h>
 #include <stdio.h>
@@ -494,6 +452,20 @@ void rv32i_step(rv32i_t *cpu, bool verbose) {
       rv32i_set_reg(cpu, rd, res);
       if (verbose) printf("%s x%d, x%d, x%d\n", mneumonic, rd, rs1, rs2);
     } break;
+    case 0x0f: /* Fence */
+      if (verbose) printf("Some sort of fence instr.\n");
+      break;
+    case 0x73: /* System instructions */
+      switch (instr) {
+        case 0x00000073:
+          if (verbose) printf("ecall\n");
+          break;
+        case 0x00100073:
+          if (verbose) printf("ebreak\n");
+          break;
+        default: UNRECOGNISED; break;
+      };
+      break;
     default: UNRECOGNISED; break;
   };
 

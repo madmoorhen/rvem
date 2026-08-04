@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
         scanf("%8x", &size);
 
         rv32i_dump_mem(&cpu, addr, size);
+        getchar();
       } break;
       case 'n': {
         int num_cycles;
