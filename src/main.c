@@ -130,6 +130,6 @@ int main(int argc, char *argv[]) {
 
   /* Cleanup */
   free(mem);
-  free(arr_mem);
+  free(arr_mem); /* TODO: remove */
   return 0;
 }
