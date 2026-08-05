@@ -201,19 +201,21 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
   uint8_t rs2 = (instr >> 20) & 0x1f;
   uint8_t funct3 = (instr >> 12) & 0x7;
   uint8_t funct7 = (instr >> 25) & 0x7f;
-  uint32_t i_imm = ((instr >> 20) & 0x7ff) | ((instr >> 31)*0xfffff800);
-  uint32_t s_imm = ((instr >> 7) & 0x1f)
+  uint64_t i_imm = ((instr >> 20) & 0x7ff)
+      | ((instr >> 31)*0xfffffffffffff800);
+  uint64_t s_imm = ((instr >> 7) & 0x1f)
       | ((instr >> 20) & 0x7e0)
-      | ((instr >> 31)*0xfffff800);
-  uint32_t b_imm = ((instr >> 7) & 0x1e)
+      | ((instr >> 31)*0xfffffffffffff800);
+  uint64_t b_imm = ((instr >> 7) & 0x1e)
       | ((instr >> 20) & 0x7e0)
       | ((instr << 4) & 0x800)
-      | ((instr >> 31)*0xfffff000);
-  uint32_t u_imm = (instr & 0xfffff000);
-  uint32_t j_imm = (instr & 0xff000)
+      | ((instr >> 31)*0xfffffffffffff000);
+  uint64_t u_imm = (instr & 0xfffff000)
+      | ((instr >> 31)*0xffffffff00000000);
+  uint64_t j_imm = (instr & 0xff000)
       | ((instr >> 9) & 0x800)
       | ((instr >> 20) & 0x7fe)
-      | ((instr >> 31)*0xfff00000);
+      | ((instr >> 31)*0xfffffffffff00000);
 
   /* Unrecognized instructions */
 #define UNRECOGNISED do {\
@@ -227,29 +229,29 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
   switch (opcode) {
     case 0x37: /* LUI */
       rv64i_set_reg(cpu, rd, u_imm);
-      if (verbose) printf("lui x%d, 0x%08x\n", rd, u_imm);
+      if (verbose) printf("lui x%d, 0x%016x\n", rd, u_imm);
       break;
     case 0x17: /* AUIPC */
       rv64i_set_reg(cpu, rd, u_imm + cpu->pc);
-      if (verbose) printf("auipc x%d, 0x%08x\n", rd, u_imm);
+      if (verbose) printf("auipc x%d, 0x%016x\n", rd, u_imm);
       break;
     case 0x6f: /* JAL */
       rv64i_set_reg(cpu, rd, cpu->pc + 4);
       cpu->pc += j_imm;
       incpc = false;
-      if (verbose) printf("jal x%d, 0x%08x\n", rd, j_imm);
+      if (verbose) printf("jal x%d, 0x%016x\n", rd, j_imm);
       break;
     case 0x67: /* JALR */
       rv64i_set_reg(cpu, rd, cpu->pc + 4);
       cpu->pc = (rv64i_get_reg(cpu, rs1) + i_imm) & 0xfffffffe;
       incpc = false;
-      if (verbose) printf("jalr x%d, 0x%08x(x%d)\n", rd, i_imm, rs1);
+      if (verbose) printf("jalr x%d, 0x%016x(x%d)\n", rd, i_imm, rs1);
       break;
     case 0x63: { /* Conditional branch */
       const char *mneumonic = NULL;
       bool branch = false;
-      uint32_t rs1_val = rv64i_get_reg(cpu, rs1);
-      uint32_t rs2_val = rv64i_get_reg(cpu, rs2);
+      uint64_t rs1_val = rv64i_get_reg(cpu, rs1);
+      uint64_t rs2_val = rv64i_get_reg(cpu, rs2);
       switch (funct3) {
         case 0:
           mneumonic = "beq";
@@ -261,11 +263,11 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           break;
         case 4:
           mneumonic = "blt";
-          branch = signedw(rs1_val) < signedw(rs2_val);
+          branch = signedd(rs1_val) < signedd(rs2_val);
           break;
         case 5:
           mneumonic = "bge";
-          branch = signedw(rs1_val) >= signedw(rs2_val);
+          branch = signedd(rs1_val) >= signedd(rs2_val);
           break;
         case 6:
           mneumonic = "bltu";
@@ -281,26 +283,31 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         cpu->pc += b_imm;
         incpc = false;
       }
-      if (verbose) printf("%s x%d, x%d, 0x%08x\n", mneumonic, rs1, rs2, b_imm);
+      if (verbose) printf("%s x%d, x%d, 0x%016x\n", mneumonic, rs1, rs2, b_imm);
     } break;
     case 0x03: { /* Load */
       const char* mneumonic = NULL;
-      uint32_t addr = i_imm + rv64i_get_reg(cpu, rs1);
-      uint32_t res = 0;
+      uint64_t addr = i_imm + rv64i_get_reg(cpu, rs1);
+      uint64_t res = 0;
       switch (funct3) {
         case 0:
           mneumonic = "lb";
           res = rv64i_getb(cpu, addr);
-          res |= (res >> 7)*0xffffff00;
+          res |= (res >> 7)*0xffffffffffffff00;
           break;
         case 1:
           mneumonic = "lh";
           res = rv64i_geth(cpu, addr);
-          res |= (res >> 15)*0xffff0000;
+          res |= (res >> 15)*0xffffffffffff0000;
           break;
         case 2:
           mneumonic = "lw";
           res = rv64i_getw(cpu, addr);
+          res |= (res >> 31)*0xffffffff00000000;
+          break;
+        case 3:
+          mneumonic = "ld";
+          res = rv64i_getd(cpu, addr);
           break;
         case 4:
           mneumonic = "lbu";
@@ -310,10 +317,14 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           mneumonic = "lhu";
           res = rv64i_geth(cpu, addr);
           break;
+        case 6:
+          mneumonic = "lwu";
+          res = rv64i_getw(cpu, addr);
+          break;
         default: UNRECOGNISED; break;
       };
       rv64i_set_reg(cpu, rd, res);
-      if (verbose) printf("%s x%d, 0x%08x(x%d)\n", mneumonic, rd, i_imm, rs1);
+      if (verbose) printf("%s x%d, 0x%016x(x%d)\n", mneumonic, rd, i_imm, rs1);
     } break;
     case 0x23: { /* Store */
       const char *mneumonic = NULL;
@@ -330,26 +341,35 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           break;
         case 2:
           mneumonic = "sw";
-          rv64i_setw(cpu, addr, rs2_val);
+          rv64i_setw(cpu, addr, (uint32_t)(rs2_val & 0xffffffff));
+          break;
+        case 3:
+          mneumonic = "sd";
+          rv64i_setd(cpu, addr, rs2_val);
           break;
         default: UNRECOGNISED; break;
       };
-      if (verbose) printf("%s x%d, 0x%08x(x%d)\n", mneumonic, rs2, s_imm, rs1);
+      if (verbose) printf("%s x%d, 0x%016x(x%d)\n", mneumonic, rs2, s_imm, rs1);
     } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
       bool shift = false;
-      uint32_t rs1_val = rv64i_get_reg(cpu, rs1);
-      uint8_t shamt = i_imm & 0x1f;
-      uint32_t res = 0;
+      uint64_t rs1_val = rv64i_get_reg(cpu, rs1);
+      uint8_t shamt = i_imm & 0x3f;
+      uint64_t res = 0;
       switch (funct3) {
         case 0:
           mneumonic = "addi";
           res = rs1_val + i_imm;
           break;
+        case 1:
+          mneumonic = "slli";
+          res = rs1_val << shamt;
+          shift = true;
+          break;
         case 2:
           mneumonic = "slti";
-          res = signedw(rs1_val) < signedw(i_imm);
+          res = signedd(rs1_val) < signedd(i_imm);
           break;
         case 3:
           mneumonic = "sltiu";
@@ -359,6 +379,19 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           mneumonic = "xori";
           res = rs1_val ^ i_imm;
           break;
+        case 5:
+          shift = true;
+          switch (funct7 & 0x7e) {
+            case 0:
+              mneumonic = "srli";
+              res = rs1_val >> shamt;
+              break;
+            case 0x20:
+              mneumonic = "srai";
+              res = unsignedd(signedd(rs1_val) >> shamt);
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
         case 6:
           mneumonic = "ori";
           res = rs1_val | i_imm;
@@ -367,30 +400,52 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           mneumonic = "andi";
           res = rs1_val & i_imm;
           break;
+        default: UNRECOGNISED; break;
+      };
+      rv64i_set_reg(cpu, rd, res);
+      if (verbose) printf(
+            shift ? "%s x%d, x%d, 0x%02x\n" : "%s x%d, x%d, 0x%016x\n",
+            mneumonic, rd, rs1, shift ? shamt : i_imm
+        );
+    } break;
+    case 0x1b: { /* Arithmetic with immediate (word) */
+      const char *mneumonic = NULL;
+      bool shift = false;
+      uint32_t rs1_val = (uint32_t)(rv64i_get_reg(cpu, rs1)&0xffffffff);
+      uint32_t i_imm_word = (uint32_t)(i_imm&0xffffffff);
+      uint8_t shamt = i_imm & 0x1f;
+      uint32_t res = 0;
+      switch (funct3) {
+        case 0:
+          mneumonic = "addiw";
+          res = rs1_val + i_imm_word;
+          break;
         case 1:
-          mneumonic = "slli";
+          mneumonic = "slliw";
           res = rs1_val << shamt;
-          shift = true;
           break;
         case 5:
           shift = true;
           switch (funct7) {
             case 0:
-              mneumonic = "srli";
+              mneumonic = "srliw";
               res = rs1_val >> shamt;
               break;
             case 0x20:
-              mneumonic = "srai";
+              mneumonic = "sraiw";
               res = unsignedw(signedw(rs1_val) >> shamt);
               break;
             default: UNRECOGNISED; break;
           }; break;
         default: UNRECOGNISED; break;
       };
-      rv64i_set_reg(cpu, rd, res);
+      rv64i_set_reg(
+          cpu, rd,
+          ((uint64_t)res)|((((uint64_t)res)>>31)*0xffffffff00000000)
+      );
       if (verbose) printf(
-            shift ? "%s x%d, x%d, 0x%05x\n" : "%s x%d, x%d, 0x%08x\n",
-            mneumonic, rd, rs1, shift ? rs2 : i_imm
+            shift ? "%s x%d, x%d, 0x%02x\n" : "%s x%d, x%d, 0x%08x\n",
+            mneumonic, rd, rs1, shift ? shamt : i_imm_word
         );
     } break;
     case 0x33: { /* Arithmetic with registers */
