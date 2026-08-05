@@ -219,7 +219,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
 
   /* Unrecognized instructions */
 #define UNRECOGNISED do {\
-  printf("Unrecognised instruction!\n");\
+  if (verbose) printf("Unrecognised instruction!\n");\
   cpu->pc += 4;\
   return;\
 } while (0)
@@ -328,8 +328,8 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
     } break;
     case 0x23: { /* Store */
       const char *mneumonic = NULL;
-      uint32_t addr = s_imm + rv64i_get_reg(cpu, rs1);
-      uint32_t rs2_val = rv64i_get_reg(cpu, rs2);
+      uint64_t addr = s_imm + rv64i_get_reg(cpu, rs1);
+      uint64_t rs2_val = rv64i_get_reg(cpu, rs2);
       switch (funct3) {
         case 0:
           mneumonic = "sb";
@@ -449,12 +449,11 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         );
     } break;
     case 0x33: { /* Arithmetic with registers */
-      /* TODO: 64 everyting, add 64-specific */
       const char *mneumonic = NULL;
-      uint32_t rs1_val = rv64i_get_reg(cpu, rs1);
-      uint32_t rs2_val = rv64i_get_reg(cpu, rs2);
-      uint8_t shamt = rs2_val & 0x1f;
-      uint32_t res = 0;
+      uint64_t rs1_val = rv64i_get_reg(cpu, rs1);
+      uint64_t rs2_val = rv64i_get_reg(cpu, rs2);
+      uint8_t shamt = rs2_val & 0x3f;
+      uint64_t res = 0;
       switch (funct3) {
         case 0:
           switch (funct7) {
@@ -480,7 +479,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           switch (funct7) {
             case 0:
               mneumonic = "slt";
-              res = signedw(rs1_val) < signedw(rs2_val);
+              res = signedd(rs1_val) < signedd(rs2_val);
               break;
             default: UNRECOGNISED; break;
           }; break;
@@ -508,7 +507,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
               break;
             case 0x20:
               mneumonic = "sra";
-              res = unsignedw(signedw(rs1_val) >> shamt);
+              res = unsignedd(signedd(rs1_val) >> shamt);
               break;
             default: UNRECOGNISED; break;
           }; break;
@@ -531,6 +530,22 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         default: UNRECOGNISED; break;
       };
       rv64i_set_reg(cpu, rd, res);
+      if (verbose) printf("%s x%d, x%d, x%d\n", mneumonic, rd, rs1, rs2);
+    } break;
+    case 0x3b: { /* Arithmetic with register (word) */
+      const char *mneumonic = NULL;
+      uint32_t rs1_val = (uint32_t)(rv64i_get_reg(cpu, rs1)&0xffffffff);
+      uint32_t rs2_val = (uint32_t)(rv64i_get_reg(cpu, rs2)&0xffffffff);
+      uint8_t shamt = rs2_val & 0x3f;
+      uint32_t res = 0;
+      switch (funct3) {
+        /* TODO */
+        default: UNRECOGNISED; break;
+      };
+      rv64i_set_reg(
+          cpu, rd,
+          ((uint64_t)res)|((((uint64_t)res)>>31)*0xffffffff00000000)
+      );
       if (verbose) printf("%s x%d, x%d, x%d\n", mneumonic, rd, rs1, rs2);
     } break;
     case 0x0f: /* Fence */
