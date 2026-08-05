@@ -63,7 +63,7 @@ extern void rv64i_seth(rv64i_t *cpu, uint64_t addr, uint16_t val);
 /* Set a word to memory */
 extern void rv64i_setw(rv64i_t *cpu, uint64_t addr, uint32_t val);
 /* Set a double word to memory */
-extern void rv64i_setw(rv64i_t *cpu, uint64_t addr, uint64_t val);
+extern void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint64_t val);
 
 /* Reset the processor */
 extern void rv64i_reset(rv64i_t *cpu);

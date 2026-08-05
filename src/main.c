@@ -13,7 +13,7 @@
 } while (0)
 
 /* Program */
-const uint8_t program[] = { };
+const uint8_t program[] = { 0x13, 0x00, 0x00, 0x00 };
 
 /* Entry point */
 int main(int argc, char *argv[]) {
@@ -56,9 +56,9 @@ int main(int argc, char *argv[]) {
         uint64_t size = 0;
 
         printf("addr: 0x");
-        scanf("%16x", &addr);
+        scanf("%16lx", &addr);
         printf("size: 0x");
-        scanf("%16x", &size);
+        scanf("%16lx", &size);
 
         rv64i_dump_mem(&cpu, addr, size);
         getchar();

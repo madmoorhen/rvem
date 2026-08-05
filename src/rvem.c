@@ -61,18 +61,18 @@ void rv64i_dump_state(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_dump_state");
   printf(
       "processor state:\n"
-      "\tpc = 0x%016x\n\n"
+      "\tpc = 0x%016lx\n\n"
       "\tx0 = 0x0000000000000000\n", cpu->pc
   );
   for (uint8_t i = 1; i < 32; i++)
-    printf("\tx%d = 0x%016x\n", i, rv64i_get_reg(cpu, i));
+    printf("\tx%d = 0x%016lx\n", i, rv64i_get_reg(cpu, i));
   if (cpu->regions) {
     memory_region_t *r = cpu->regions;
     while (r) {
       printf(
           "memory region:\n"
-          "\taddress = 0x%016x\n"
-          "\tsize = 0x%016x\n"
+          "\taddress = 0x%016lx\n"
+          "\tsize = 0x%016lx\n"
           "\tallocation = %p\n",
           r->addr, r->size, r->data
       );
@@ -83,7 +83,7 @@ void rv64i_dump_state(rv64i_t *cpu) {
 /* Dump the memory at a location to the console */
 void rv64i_dump_mem(rv64i_t *cpu, uint64_t addr, uint64_t size) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_dump_mem");
-  printf("memory (%llu bytes, starting at 0x%016x):\n", size, addr);
+  printf("memory (%lu bytes, starting at 0x%016lx):\n", size, addr);
   for (uint64_t i = 0; i < size; i++)
     printf(
       "0x%02x%c", rv64i_getb(cpu, addr+i), i % 4 == 3 ? '\n' : ' '
@@ -116,7 +116,7 @@ uint8_t rv64i_getb(rv64i_t *cpu, uint64_t addr) {
       return r->data[addr - r->addr];
     r = r->next;
   }
-  printf("rv64i_getb called on addr 0x%016x, which isn't mapped\n", addr);
+  printf("rv64i_getb called on addr 0x%016lx, which isn't mapped\n", addr);
   return 0;
 }
 /* Get a half word from memory */
@@ -132,15 +132,15 @@ uint32_t rv64i_getw(rv64i_t *cpu, uint64_t addr) {
       | (((uint32_t)rv64i_getb(cpu, addr+3)) << 24);
 }
 /* Get a double word from memory */
-uint32_t rv64i_getd(rv64i_t *cpu, uint64_t addr) {
-  return (uint32_t)rv64i_getb(cpu, addr)
-      | (((uint32_t)rv64i_getb(cpu, addr+1)) << 8)
-      | (((uint32_t)rv64i_getb(cpu, addr+2)) << 16)
-      | (((uint32_t)rv64i_getb(cpu, addr+3)) << 24)
-      | (((uint32_t)rv64i_getb(cpu, addr+4)) << 32)
-      | (((uint32_t)rv64i_getb(cpu, addr+5)) << 40)
-      | (((uint32_t)rv64i_getb(cpu, addr+6)) << 48)
-      | (((uint32_t)rv64i_getb(cpu, addr+7)) << 56);
+uint64_t rv64i_getd(rv64i_t *cpu, uint64_t addr) {
+  return (uint64_t)rv64i_getb(cpu, addr)
+      | (((uint64_t)rv64i_getb(cpu, addr+1)) << 8)
+      | (((uint64_t)rv64i_getb(cpu, addr+2)) << 16)
+      | (((uint64_t)rv64i_getb(cpu, addr+3)) << 24)
+      | (((uint64_t)rv64i_getb(cpu, addr+4)) << 32)
+      | (((uint64_t)rv64i_getb(cpu, addr+5)) << 40)
+      | (((uint64_t)rv64i_getb(cpu, addr+6)) << 48)
+      | (((uint64_t)rv64i_getb(cpu, addr+7)) << 56);
 }
 /* Set a byte to memory */
 void rv64i_setb(rv64i_t *cpu, uint64_t addr, uint8_t val) {
@@ -154,7 +154,7 @@ void rv64i_setb(rv64i_t *cpu, uint64_t addr, uint8_t val) {
     }
     r = r->next;
   }
-  printf("rv64i_setb called on addr 0x%016x, which isn't mapped", addr);
+  printf("rv64i_setb called on addr 0x%016lx, which isn't mapped", addr);
 }
 /* Set a half word to memory */
 void rv64i_seth(rv64i_t *cpu, uint64_t addr, uint16_t val) {
@@ -169,7 +169,7 @@ void rv64i_setw(rv64i_t *cpu, uint64_t addr, uint32_t val) {
   rv64i_setb(cpu, addr+3, (uint8_t)((val >> 24) & 0xff));
 }
 /* Set a double word to memory */
-void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint32_t val) {
+void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint64_t val) {
   rv64i_setb(cpu, addr, (uint8_t)(val & 0xff));
   rv64i_setb(cpu, addr+1, (uint8_t)((val >> 8) & 0xff));
   rv64i_setb(cpu, addr+2, (uint8_t)((val >> 16) & 0xff));
@@ -229,23 +229,23 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
   switch (opcode) {
     case 0x37: /* LUI */
       rv64i_set_reg(cpu, rd, u_imm);
-      if (verbose) printf("lui x%d, 0x%016x\n", rd, u_imm);
+      if (verbose) printf("lui x%d, 0x%016lx\n", rd, u_imm);
       break;
     case 0x17: /* AUIPC */
       rv64i_set_reg(cpu, rd, u_imm + cpu->pc);
-      if (verbose) printf("auipc x%d, 0x%016x\n", rd, u_imm);
+      if (verbose) printf("auipc x%d, 0x%016lx\n", rd, u_imm);
       break;
     case 0x6f: /* JAL */
       rv64i_set_reg(cpu, rd, cpu->pc + 4);
       cpu->pc += j_imm;
       incpc = false;
-      if (verbose) printf("jal x%d, 0x%016x\n", rd, j_imm);
+      if (verbose) printf("jal x%d, 0x%016lx\n", rd, j_imm);
       break;
     case 0x67: /* JALR */
       rv64i_set_reg(cpu, rd, cpu->pc + 4);
       cpu->pc = (rv64i_get_reg(cpu, rs1) + i_imm) & 0xfffffffe;
       incpc = false;
-      if (verbose) printf("jalr x%d, 0x%016x(x%d)\n", rd, i_imm, rs1);
+      if (verbose) printf("jalr x%d, 0x%016lx(x%d)\n", rd, i_imm, rs1);
       break;
     case 0x63: { /* Conditional branch */
       const char *mneumonic = NULL;
@@ -283,7 +283,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         cpu->pc += b_imm;
         incpc = false;
       }
-      if (verbose) printf("%s x%d, x%d, 0x%016x\n", mneumonic, rs1, rs2, b_imm);
+      if (verbose) printf("%s x%d, x%d, 0x%016lx\n", mneumonic, rs1, rs2, b_imm);
     } break;
     case 0x03: { /* Load */
       const char* mneumonic = NULL;
@@ -324,7 +324,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         default: UNRECOGNISED; break;
       };
       rv64i_set_reg(cpu, rd, res);
-      if (verbose) printf("%s x%d, 0x%016x(x%d)\n", mneumonic, rd, i_imm, rs1);
+      if (verbose) printf("%s x%d, 0x%016lx(x%d)\n", mneumonic, rd, i_imm, rs1);
     } break;
     case 0x23: { /* Store */
       const char *mneumonic = NULL;
@@ -349,7 +349,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           break;
         default: UNRECOGNISED; break;
       };
-      if (verbose) printf("%s x%d, 0x%016x(x%d)\n", mneumonic, rs2, s_imm, rs1);
+      if (verbose) printf("%s x%d, 0x%016lx(x%d)\n", mneumonic, rs2, s_imm, rs1);
     } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
@@ -404,7 +404,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
       };
       rv64i_set_reg(cpu, rd, res);
       if (verbose) printf(
-            shift ? "%s x%d, x%d, 0x%02x\n" : "%s x%d, x%d, 0x%016x\n",
+            shift ? "%s x%d, x%d, 0x%02lx\n" : "%s x%d, x%d, 0x%016lx\n",
             mneumonic, rd, rs1, shift ? shamt : i_imm
         );
     } break;
@@ -449,6 +449,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
         );
     } break;
     case 0x33: { /* Arithmetic with registers */
+      /* TODO: 64 everyting, add 64-specific */
       const char *mneumonic = NULL;
       uint32_t rs1_val = rv64i_get_reg(cpu, rs1);
       uint32_t rs2_val = rv64i_get_reg(cpu, rs2);
