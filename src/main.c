@@ -13,23 +13,33 @@
 } while (0)
 
 /* Program */
-const uint8_t program[] = { 0x13, 0x00, 0x00, 0x00 };
+const uint8_t program[] = { 0x37, 0x05, 0x00, 0x10 };
 
 /* Entry point */
 int main(int argc, char *argv[]) {
   rv64i_t cpu;
   rv64i_init(&cpu);
   
-  uint8_t *mem = malloc(0x1000);
-  ASSERT(mem, "malloc() failed");
-  memcpy(mem, program, sizeof(program));
-  memory_region_t mem_region = {
+  uint8_t *prog_mem = malloc(sizeof(program));
+  ASSERT(prog_mem, "malloc() failed");
+  memcpy(prog_mem, program, sizeof(program));
+  memory_region_t prog_region = {
     .addr = 0,
-    .size = 0x1000,
-    .data = mem,
+    .size = sizeof(program),
+    .data = prog_mem,
     .next = NULL
   };
-  rv64i_add_region(&cpu, &mem_region);
+  rv64i_add_region(&cpu, &prog_region);
+
+  uint8_t *data_mem = malloc(0x1000);
+  ASSERT(data_mem, "malloc() failed");
+  memory_region_t data_region = {
+    .addr = 0x10000000,
+    .size = 0x1000,
+    .data = data_mem,
+    .next = NULL
+  };
+  rv64i_add_region(&cpu, &data_region);
   
   rv64i_reset(&cpu);
   /* Main loop */
@@ -86,6 +96,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Cleanup */
-  free(mem);
+  free(prog_mem);
+  free(data_mem);
   return 0;
 }
