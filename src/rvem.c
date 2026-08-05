@@ -539,7 +539,38 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
       uint8_t shamt = rs2_val & 0x3f;
       uint32_t res = 0;
       switch (funct3) {
-        /* TODO */
+        case 0:
+          switch (funct7) {
+            case 0:
+              mneumonic = "addw";
+              res = rs1_val + rs2_val;
+              break;
+            case 0x20:
+              mneumonic = "subw";
+              res = rs1_val + ~rs2_val + 1;
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 1:
+          switch (funct7) {
+            case 0:
+              mneumonic = "sllw";
+              res = rs1_val << shamt;
+              break; 
+            default: UNRECOGNISED; break;
+          } break;
+        case 5:
+          switch (funct7) {
+            case 0:
+              mneumonic = "srlw";
+              res = rs1_val >> shamt;
+              break;
+            case 0x20:
+              mneumonic = "sraw";
+              res = unsignedw(signedw(rs1_val) >> shamt);
+              break;
+            default: UNRECOGNISED; break;
+          } break;
         default: UNRECOGNISED; break;
       };
       rv64i_set_reg(
