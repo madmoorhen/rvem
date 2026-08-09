@@ -112,8 +112,10 @@ uint8_t rv64i_getb(rv64i_t *cpu, uint64_t addr) {
   ASSERT(cpu->regions, "rv64i_getb called on cpu with no regions");
   memory_region_t *r = cpu->regions;
   while (r) {
-    if (r->addr <= addr && r->addr + r->size > addr)
+    if (r->addr <= addr && r->addr + r->size > addr) {
+      if (r->get_callback) r->get_callback(addr);
       return r->data[addr - r->addr];
+    }
     r = r->next;
   }
   printf("rv64i_getb called on addr 0x%016lx, which isn't mapped\n", addr);
@@ -150,6 +152,7 @@ void rv64i_setb(rv64i_t *cpu, uint64_t addr, uint8_t val) {
   while (r) {
     if (r->addr <= addr && r->addr + r->size > addr) {
       r->data[addr - r->addr] = val;
+      if (r->set_callback) r->set_callback(addr, val);
       return;
     }
     r = r->next;

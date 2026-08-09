@@ -20,6 +20,8 @@ typedef struct {
   uint64_t addr;
   uint64_t size;
   uint8_t *data;
+  void (*get_callback)(uint64_t addr);
+  void (*set_callback)(uint64_t addr, uint8_t val);
   void *next;
 } memory_region_t;
 
