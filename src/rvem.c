@@ -190,8 +190,8 @@ void rv64i_reset(rv64i_t *cpu) {
   cpu->pc = 0;
   printf("reset ocurred\n");
 }
-/* Step the processor */
-void rv64i_step(rv64i_t *cpu, bool verbose) {
+/* Step the processor - returns true on ebreak */
+bool rv64i_step(rv64i_t *cpu, bool verbose) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_step");
 
   /* Fetch */
@@ -224,11 +224,12 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
 #define UNRECOGNISED do {\
   if (verbose) printf("Unrecognised instruction!\n");\
   cpu->pc += 4;\
-  return;\
+  return false;\
 } while (0)
 
   /* Execute */
   bool incpc = true;
+  bool ebreak = false;
   switch (opcode) {
     case 0x37: /* LUI */
       rv64i_set_reg(cpu, rd, u_imm);
@@ -619,6 +620,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
           if (verbose) printf("ecall\n");
           break;
         case 0x00100073:
+          ebreak = true;
           if (verbose) printf("ebreak\n");
           break;
         default: UNRECOGNISED; break;
@@ -629,4 +631,7 @@ void rv64i_step(rv64i_t *cpu, bool verbose) {
 
   /* Increment program counter */
   if (incpc) cpu->pc += 4;
+
+  /* Any ebreaks are used to halt infinite loops */
+  return ebreak;
 }

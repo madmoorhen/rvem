@@ -69,7 +69,7 @@ extern void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint64_t val);
 
 /* Reset the processor */
 extern void rv64i_reset(rv64i_t *cpu);
-/* Step the processor */
-extern void rv64i_step(rv64i_t *cpu, bool verbose);
+/* Step the processor - returns true on ebreak */
+extern bool rv64i_step(rv64i_t *cpu, bool verbose);
 
 #endif /* RVEM_H */

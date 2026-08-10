@@ -42,7 +42,7 @@ const uint8_t program[] = {
   0x23, 0xa0, 0xb6, 0x00,
   0x13, 0x06, 0x16, 0x00,
   0x6f, 0xf0, 0x9f, 0xfc,
-  0x6f, 0x00, 0x00, 0x00
+  0x73, 0x00, 0x10, 0x00
 };
 
 /* UART set callback */
@@ -134,10 +134,11 @@ int main(int argc, char *argv[]) {
         verbose = getchar();
         printf("%d cycles\n", num_cycles);
         if (num_cycles <= 0) {
-          while (1) rv64i_step(&cpu, verbose != 'n' && verbose != 'N');
+          while (!rv64i_step(&cpu, verbose != 'n' && verbose != 'N'));
         } else {
-          for (int i = 0; i < num_cycles; i++)
-            rv64i_step(&cpu, verbose != 'n' && verbose != 'N');
+          for (int i = 0; i < num_cycles; i++) {
+            if (rv64i_step(&cpu, verbose != 'n' && verbose != 'N')) break;
+          }
         }
       } break;
       case 'v': rv64i_step(&cpu, true); break;
