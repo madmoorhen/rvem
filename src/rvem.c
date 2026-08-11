@@ -608,30 +608,42 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
               break;
           };
           break;
-        case 1:
+        case 1: /* fence.i */
           if (verbose) printf("fence.i\n");
           break;
         default: UNRECOGNISED; break;
       };
       break;
     case 0x73: /* System instructions */
-      switch (instr) {
-        case 0x00000073:
-          if (verbose) printf("ecall\n");
-          break;
-        case 0x00100073:
-          ebreak = true;
-          if (verbose) printf("ebreak\n");
-          break;
+      uint16_t csr = (uint16_t)(i_imm & 0xfff);
+      uint8_t uimm = rs1;
+      /* TODO: CSRs */
+      switch (funct3) {
+        case 0:
+          switch (instr) {
+            case 0x00000073:
+              if (verbose) printf("ecall\n");
+              break;
+            case 0x00100073:
+              ebreak = true;
+              if (verbose) printf("ebreak\n");
+              break;
+            default: UNRECOGNISED; break;
+          }; break;
+        case 1: break; /* csrrw */
+        case 2: break; /* csrrs */
+        case 3: break; /* csrrc */
+        case 5: break; /* csrrwi */
+        case 6: break; /* csrrsi */
+        case 7: break; /* csrrci */
         default: UNRECOGNISED; break;
-      };
-      break;
+      }; break;
     default: UNRECOGNISED; break;
   };
 
   /* Increment program counter */
   if (incpc) cpu->pc += 4;
 
-  /* Any ebreaks are used to halt infinite loops */
+  /* Report any ebreaks */
   return ebreak;
 }
