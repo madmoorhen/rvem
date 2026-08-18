@@ -183,6 +183,11 @@ void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint64_t val) {
   rv64i_setb(cpu, addr+7, (uint8_t)((val >> 56) & 0xff));
 }
 
+/* Get a CSR (if rd is x0, spec says no side effects will occur) */
+static uint64_t rv64i_get_csr(rv64i_t *cpu, uint16_t csr, bool side_effects);
+/* Set a CSR */
+static void rv64i_set_csr(rv64i_t *cpu, uint16_t csr);
+
 /* Reset the processor */
 void rv64i_reset(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_reset");
