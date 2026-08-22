@@ -183,11 +183,6 @@ void rv64i_setd(rv64i_t *cpu, uint64_t addr, uint64_t val) {
   rv64i_setb(cpu, addr+7, (uint8_t)((val >> 56) & 0xff));
 }
 
-/* Get a CSR (if rd is x0, spec says no side effects will occur) */
-static uint64_t rv64i_get_csr(rv64i_t *cpu, uint16_t csr, bool side_effects);
-/* Set a CSR */
-static void rv64i_set_csr(rv64i_t *cpu, uint16_t csr);
-
 /* Reset the processor */
 void rv64i_reset(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_reset");
@@ -619,7 +614,7 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
         default: UNRECOGNISED; break;
       };
       break;
-    case 0x73: /* System instructions */
+    case 0x73: { /* System instructions */
       uint16_t csr = (uint16_t)(i_imm & 0xfff);
       uint8_t uimm = rs1;
       /* TODO: CSRs */
@@ -642,6 +637,7 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
         case 6: break; /* csrrsi */
         case 7: break; /* csrrci */
         default: UNRECOGNISED; break;
+      };
       }; break;
     default: UNRECOGNISED; break;
   };
