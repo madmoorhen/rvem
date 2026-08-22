@@ -68,6 +68,16 @@ int main(int argc, char *argv[]) {
   };
   rv64i_add_region(&cpu, &prog_region);
 
+  rv64i_csr_t test_csr = {
+    .addr = 0xabc,
+    .value = 0xdeadbeef1234abcd,
+    .name = "test_csr",
+    .get = NULL,
+    .set = NULL,
+    .next = NULL
+  };
+  rv64i_add_csr(&cpu, &test_csr);
+
   uint8_t *data_mem = malloc(0x1000);
   ASSERT(data_mem, "malloc() failed");
   memory_region_t data_region = {

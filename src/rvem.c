@@ -24,6 +24,7 @@ static uint64_t unsignedd(int64_t val) { return *((uint64_t *)(&val)); }
 void rv64i_init(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_init");
   cpu->regions = NULL;
+  cpu->csrs = NULL;
 }
 
 /* Add a memory region */
@@ -56,6 +57,36 @@ void rv64i_remove_region(rv64i_t *cpu, memory_region_t *region) {
   r->next = region->next;
 }
 
+/* Add a CSR */
+void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
+  ASSERT(cpu, "NULL passed as cpu to rv64i_add_csr");
+  ASSERT(cpu, "NULL passed as csr to rv64i_add_csr");
+  if (!(cpu->csrs)) {
+    cpu->csrs = csr;
+    return;
+  }
+  rv64i_csr_t *c = cpu->csrs;
+  while (c->next) c = c->next;
+  c->next = csr;
+  csr->next = NULL;
+}
+/* Remove a CSR */
+void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
+  ASSERT(cpu, "NULL passed as cpu to rv64i_remove_csr");
+  ASSERT(cpu, "NULL passed as csr to rv64i_remove_csr");
+  if (!(cpu->regions)) {
+    printf("rv64i_remove_csr called on cpu with no csrs");
+    return;
+  }
+  rv64i_csr_t *c = cpu->csrs;
+  while (c->next && c->next != csr) c = c->next;
+  if (!(c->next)) {
+    printf("rv64i_remove_csr tried to remove a csr that doesn't exist");
+    return;
+  }
+  c->next = csr->next;
+}
+
 /* Dump the processor state to the console */
 void rv64i_dump_state(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_dump_state");
@@ -66,6 +97,14 @@ void rv64i_dump_state(rv64i_t *cpu) {
   );
   for (uint8_t i = 1; i < 32; i++)
     printf("\tx%d = 0x%016lx\n", i, rv64i_get_reg(cpu, i));
+  printf("control and status registers:\n");
+  if (cpu->csrs) {
+    rv64i_csr_t *c = cpu->csrs;
+    while (c) {
+      printf("\t%s = 0x%016lx (addr 0x%03x)\n", c->name, c->value, c->addr);
+      c = c->next;
+    }
+  }
   if (cpu->regions) {
     memory_region_t *r = cpu->regions;
     while (r) {

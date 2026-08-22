@@ -25,11 +25,22 @@ typedef struct {
   void *next;
 } memory_region_t;
 
+/* CSR */
+typedef struct {
+  uint16_t addr: 12;
+  uint64_t value;
+  const char *name;
+  uint64_t (*get)(void);
+  void (*set)(uint64_t val);
+  void *next;
+} rv64i_csr_t;
+
 /* Processor state */
 typedef struct {
   uint64_t x[31];
   uint64_t pc;
   memory_region_t *regions;
+  rv64i_csr_t *csrs;
 } rv64i_t;
 
 /* Initialise the processor */
@@ -39,6 +50,11 @@ extern void rv64i_init(rv64i_t *cpu);
 extern void rv64i_add_region(rv64i_t *cpu, memory_region_t *region);
 /* Remove a memory region */
 extern void rv64i_remove_region(rv64i_t *cpu, memory_region_t *region);
+
+/* Add a CSR */
+extern void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr);
+/* Remove a CSR */
+extern void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr);
 
 /* Dump the processor state to the console */
 extern void rv64i_dump_state(rv64i_t *cpu);
