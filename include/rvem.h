@@ -30,8 +30,8 @@ typedef struct {
   uint16_t addr: 12;
   uint64_t value;
   const char *name;
-  uint64_t (*get)(void);
-  void (*set)(uint64_t val);
+  uint64_t (*get)(void *cpu, void *csr);
+  void (*set)(void *cpu, void *csr, uint64_t val);
   void *next;
 } rv64i_csr_t;
 

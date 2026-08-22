@@ -61,7 +61,9 @@ void rv64i_remove_region(rv64i_t *cpu, memory_region_t *region) {
 /* Add a CSR */
 void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_add_csr");
-  ASSERT(cpu, "NULL passed as csr to rv64i_add_csr");
+  ASSERT(csr, "NULL passed as csr to rv64i_add_csr");
+  ASSERT(csr->get, "csr without get passed to rv64i_add_csr");
+  ASSERT(csr->set, "csr without set passed to rv64i_add_csr");
   if (!(cpu->csrs)) {
     cpu->csrs = csr;
     return;
@@ -74,7 +76,7 @@ void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
 /* Remove a CSR */
 void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_remove_csr");
-  ASSERT(cpu, "NULL passed as csr to rv64i_remove_csr");
+  ASSERT(csr, "NULL passed as csr to rv64i_remove_csr");
   if (!(cpu->csrs)) {
     printf("rv64i_remove_csr called on cpu with no csrs");
     return;
@@ -677,9 +679,12 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
       };
       break;
     case 0x73: { /* System instructions */
+      const char *mneumonic = NULL;
       uint16_t csr = (uint16_t)(i_imm & 0xfff);
       uint8_t uimm = rs1;
-      const char *mneumonic = NULL;
+      uint64_t rs1_val = rv64i_get_reg(cpu, rs1);
+      rv64i_csr_t *found_csr = rv64i_find_csr_addr(cpu, csr);
+      if (!found_csr && funct3 >= 1 && funct3 <= 7) UNRECOGNISED;
       switch (funct3) {
         case 0:
           switch (instr) {
@@ -694,8 +699,10 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
           }; break;
         case 1: /* csrrw */
           mneumonic = "csrrw";
-          /* TODO */
+          if (rd) rv64i_set_reg(cpu, rd, found_csr->get(cpu, found_csr));
+          found_csr->set(cpu, found_csr, rs1_val);
           goto log_csr_reg; 
+          /* NOTE: Read spec carefully, especially handling rd/rs1/uimm=0 */
         case 2: /* csrrs */
           mneumonic = "csrrs";
           /* TODO */
@@ -718,13 +725,19 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
           goto log_csr_imm;
         default: UNRECOGNISED; break;
         log_csr_reg:
-          /* TODO */
+          if (verbose) printf(
+                "%s x%d, 0x%03x (%s), x%d\n",
+                mneumonic, rd, csr, found_csr->name, rs1
+            );
           break;
         log_csr_imm:
-          /* TODO */
+          if (verbose) printf(
+                "%s x%d, 0x%03x (%s), 0x%02x\n",
+                mneumonic, rd, csr, found_csr->name, uimm
+            );
           break;
       };
-      }; break;
+    }; break;
     default: UNRECOGNISED; break;
   };
 

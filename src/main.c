@@ -49,6 +49,13 @@ const uint8_t program[] = {
 void uart_set_callback(uint64_t addr, uint8_t val) {
   if (addr == 0x9000000) putchar(val);
 }
+/* Test CSR get and set */
+uint64_t straightforward_csr_get(void *cpu, void *csr) {
+  return ((rv64i_csr_t *)csr)->value;
+}
+void straightforward_csr_set(void *cpu, void *csr, uint64_t val) {
+  ((rv64i_csr_t *)csr)->value = val;
+}
 
 /* Entry point */
 int main(int argc, char *argv[]) {
@@ -72,8 +79,8 @@ int main(int argc, char *argv[]) {
     .addr = 0xabc,
     .value = 0xdeadbeef1234abcd,
     .name = "test_csr",
-    .get = NULL,
-    .set = NULL,
+    .get = straightforward_csr_get,
+    .set = straightforward_csr_set,
     .next = NULL
   };
   rv64i_add_csr(&cpu, &test_csr);
