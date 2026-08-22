@@ -55,6 +55,10 @@ extern void rv64i_remove_region(rv64i_t *cpu, memory_region_t *region);
 extern void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr);
 /* Remove a CSR */
 extern void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr);
+/* Find CSR by address (returns NULL if doesn't exist) */
+extern rv64i_csr_t *rv64i_find_csr_addr(rv64i_t *cpu, uint16_t addr);
+/* Find CSR by name (returns NULL if doesn't exist) */
+extern rv64i_csr_t *rv64i_find_csr_name(rv64i_t *cpu, const char *name);
 
 /* Dump the processor state to the console */
 extern void rv64i_dump_state(rv64i_t *cpu);

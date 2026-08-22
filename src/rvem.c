@@ -3,6 +3,7 @@
 
 /* Includes */
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 /* Assertion */
@@ -74,7 +75,7 @@ void rv64i_add_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
 void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_remove_csr");
   ASSERT(cpu, "NULL passed as csr to rv64i_remove_csr");
-  if (!(cpu->regions)) {
+  if (!(cpu->csrs)) {
     printf("rv64i_remove_csr called on cpu with no csrs");
     return;
   }
@@ -85,6 +86,28 @@ void rv64i_remove_csr(rv64i_t *cpu, rv64i_csr_t *csr) {
     return;
   }
   c->next = csr->next;
+}
+/* Find CSR by address (returns NULL if doesn't exist) */
+rv64i_csr_t *rv64i_find_csr_addr(rv64i_t *cpu, uint16_t addr) {
+  ASSERT(cpu, "NULL passed as cpu to rv64i_find_csr_addr");
+  ASSERT(addr < 0x1000, ">12 bit addr passed to rv64i_find_csr_addr");
+  rv64i_csr_t *c = cpu->csrs;
+  while (c) {
+    if (c->addr == addr) return c;
+    c = c->next;
+  }
+  return NULL;
+}
+/* Find CSR by name (returns NULL if doesn't exist) */
+rv64i_csr_t *rv64i_find_csr_name(rv64i_t *cpu, const char *name) {
+  ASSERT(cpu, "NULL passed as cpu to rv64i_find_csr_name");
+  ASSERT(name, "NULL passed as name to rv64i_find_csr_name");
+  rv64i_csr_t *c = cpu->csrs;
+  while (c) {
+    if (c->name && !strcmp(c->name, name)) return c;
+    c = c->next;
+  }
+  return NULL;
 }
 
 /* Dump the processor state to the console */
