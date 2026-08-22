@@ -656,7 +656,7 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
     case 0x73: { /* System instructions */
       uint16_t csr = (uint16_t)(i_imm & 0xfff);
       uint8_t uimm = rs1;
-      /* TODO: CSRs */
+      const char *mneumonic = NULL;
       switch (funct3) {
         case 0:
           switch (instr) {
@@ -669,13 +669,37 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
               break;
             default: UNRECOGNISED; break;
           }; break;
-        case 1: break; /* csrrw */
-        case 2: break; /* csrrs */
-        case 3: break; /* csrrc */
-        case 5: break; /* csrrwi */
-        case 6: break; /* csrrsi */
-        case 7: break; /* csrrci */
+        case 1: /* csrrw */
+          mneumonic = "csrrw";
+          /* TODO */
+          goto log_csr_reg; 
+        case 2: /* csrrs */
+          mneumonic = "csrrs";
+          /* TODO */
+          goto log_csr_reg; 
+        case 3: /* csrrc */
+          mneumonic = "csrrc";
+          /* TODO */
+          goto log_csr_reg; 
+        case 5: /* csrrwi */
+          mneumonic = "csrrwi";
+          /* TODO */
+          goto log_csr_imm;
+        case 6: /* csrrsi */
+          mneumonic = "csrrsi";
+          /* TODO */
+          goto log_csr_imm;
+        case 7: /* csrrci */
+          mneumonic = "csrrci";
+          /* TODO */
+          goto log_csr_imm;
         default: UNRECOGNISED; break;
+        log_csr_reg:
+          /* TODO */
+          break;
+        log_csr_imm:
+          /* TODO */
+          break;
       };
       }; break;
     default: UNRECOGNISED; break;
