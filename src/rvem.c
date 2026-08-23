@@ -6,12 +6,6 @@
 #include <string.h>
 #include <stdio.h>
 
-/*
- * rv64i with:
- * - Zifencei
- * - Zicsr
- */
-
 /* Assertion */
 #define ASSERT(expr, msg) do {\
   if (!(expr)) {\
@@ -52,6 +46,7 @@ void rv64i_init(rv64i_t *cpu) {
   rv64i_add_csr(cpu, &(cpu->csr_cycle));
   rv64i_add_csr(cpu, &(cpu->csr_time));
   rv64i_add_csr(cpu, &(cpu->csr_instret));
+  clock_gettime(CLOCK_MONOTONIC, &(cpu->prev_time));
 }
 
 /* Add a memory region */
@@ -278,11 +273,19 @@ void rv64i_reset(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_reset");
   for (uint8_t i = 0; i < 32; i++) rv64i_set_reg(cpu, i, 0);
   cpu->pc = 0;
+  /* TODO: reset CSRs */
   printf("reset ocurred\n");
 }
 /* Step the processor - returns true on ebreak */
 bool rv64i_step(rv64i_t *cpu, bool verbose) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_step");
+
+  /* Update time CSR */
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  (cpu->csr_time.value) += (t.tv_sec - (cpu->prev_time).tv_sec)*10000000;
+  (cpu->csr_time.value) += (t.tv_nsec - (cpu->prev_time).tv_nsec)/100;
+  (cpu->prev_time) = t;
 
   /* Fetch */
   uint32_t instr = rv64i_getw(cpu, cpu->pc);

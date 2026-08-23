@@ -12,6 +12,8 @@
  */
 
 /* Includes */
+#define _POSIX_C_SOURCE 199309L /* For clock_gettime() for "time" CSR */
+#include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -42,6 +44,7 @@ typedef struct {
   memory_region_t *regions;
   rv64i_csr_t *csrs;
   rv64i_csr_t csr_cycle, csr_time, csr_instret;
+  struct timespec prev_time;
 } rv64i_t;
 
 /* Initialise the processor */
