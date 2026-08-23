@@ -273,7 +273,9 @@ void rv64i_reset(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_reset");
   for (uint8_t i = 0; i < 32; i++) rv64i_set_reg(cpu, i, 0);
   cpu->pc = 0;
-  /* TODO: reset CSRs */
+  (cpu->csr_cycle.value) = 0;
+  (cpu->csr_time.value) = 0;
+  (cpu->csr_instret.value) = 0;
   printf("reset ocurred\n");
 }
 /* Step the processor - returns true on ebreak */
