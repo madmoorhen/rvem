@@ -702,27 +702,37 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
           if (rd) rv64i_set_reg(cpu, rd, found_csr->get(cpu, found_csr));
           found_csr->set(cpu, found_csr, rs1_val);
           goto log_csr_reg; 
-          /* NOTE: Read spec carefully, especially handling rd/rs1/uimm=0 */
-        case 2: /* csrrs */
+        case 2: { /* csrrs */
           mneumonic = "csrrs";
-          /* TODO */
-          goto log_csr_reg; 
-        case 3: /* csrrc */
+          uint64_t csr_val = found_csr->get(cpu, found_csr);
+          rv64i_set_reg(cpu, rd, csr_val);
+          if (rs1) found_csr->set(cpu, found_csr, rs1_val | csr_val);
+        } goto log_csr_reg; 
+        case 3: { /* csrrc */
           mneumonic = "csrrc";
-          /* TODO */
-          goto log_csr_reg; 
+          uint64_t csr_val = found_csr->get(cpu, found_csr);
+          rv64i_set_reg(cpu, rd, csr_val);
+          if (rs1) found_csr->set(cpu, found_csr, (~rs1_val) & csr_val);
+        } goto log_csr_reg; 
         case 5: /* csrrwi */
           mneumonic = "csrrwi";
-          /* TODO */
+          if (rd) rv64i_set_reg(cpu, rd, found_csr->get(cpu, found_csr));
+          found_csr->set(cpu, found_csr, uimm);
           goto log_csr_imm;
-        case 6: /* csrrsi */
+        case 6: { /* csrrsi */
           mneumonic = "csrrsi";
-          /* TODO */
-          goto log_csr_imm;
-        case 7: /* csrrci */
+          uint64_t csr_val = found_csr->get(cpu, found_csr);
+          rv64i_set_reg(cpu, rd, csr_val);
+          if (uimm) found_csr->set(cpu, found_csr, uimm | csr_val);
+        } goto log_csr_imm;
+        case 7: { /* csrrci */
           mneumonic = "csrrci";
-          /* TODO */
-          goto log_csr_imm;
+          uint64_t csr_val = found_csr->get(cpu, found_csr);
+          rv64i_set_reg(cpu, rd, csr_val);
+          if (uimm) found_csr->set(
+                cpu, found_csr, (~((uint64_t)uimm)) & csr_val
+            );
+        } goto log_csr_imm;
         default: UNRECOGNISED; break;
         log_csr_reg:
           if (verbose) printf(
