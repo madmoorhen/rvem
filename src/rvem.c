@@ -785,13 +785,16 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   /* Increment program counter */
   if (incpc) cpu->pc += 4;
 
+  /* Increment cycle CSR */
+  (CSR_CYCLE.value)++;
+
   /* Report any ebreaks */
   return ebreak;
 }
 
 /* CSR handler definitions */
-static uint64_t csr_cycle_get(void *cpu, void *csr) { return 0; } /* TODO */
-static void csr_cycle_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
+static uint64_t csr_cycle_get(void *cpu, void *csr) { return CSR_CYCLE.value; }
+static void csr_cycle_set(void *cpu, void *csr, uint64_t val) { } /* !!! */
 static uint64_t csr_time_get(void *cpu, void *csr) { return 0; } /* TODO */
 static void csr_time_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
 static uint64_t csr_instret_get(void *cpu, void *csr) { return 0; } /* TODO */
