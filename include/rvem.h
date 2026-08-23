@@ -41,6 +41,7 @@ typedef struct {
   uint64_t pc;
   memory_region_t *regions;
   rv64i_csr_t *csrs;
+  rv64i_csr_t csr_cycle, csr_time, csr_instret;
 } rv64i_t;
 
 /* Initialise the processor */

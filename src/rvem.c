@@ -24,21 +24,6 @@
 static uint64_t csr_basic_uro_get(void *cpu, void *csr);
 static void csr_basic_uro_set(void *cpu, void *csr, uint64_t val);
 
-/* CSRs */
-#define DEF_CSR(caps, lower, handlers, address, init) \
-static rv64i_csr_t CSR_##caps = {\
-    .addr = address,\
-    .value = init,\
-    .name = #lower,\
-    .get = csr_##handlers##_get,\
-    .set = csr_##handlers##_set,\
-    .next = NULL\
-}
-DEF_CSR(CYCLE, cycle, basic_uro, 0xc00, 0);
-DEF_CSR(TIME, time, basic_uro, 0xc01, 0);
-DEF_CSR(INSTRET, instret, basic_uro, 0xc02, 0);
-#undef DEF_CSR
-
 /* Signed value from unsigned (reinterpret) */
 static int32_t signedw(uint32_t val) { return *((int32_t *)(&val)); }
 static int64_t signedd(uint64_t val) { return *((int64_t *)(&val)); }
@@ -51,9 +36,22 @@ void rv64i_init(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_init");
   cpu->regions = NULL;
   cpu->csrs = NULL;
-  rv64i_add_csr(cpu, &CSR_CYCLE);
-  rv64i_add_csr(cpu, &CSR_TIME);
-  rv64i_add_csr(cpu, &CSR_INSTRET);
+#define DEF_CSR(ident, handlers, address, init) \
+  cpu->csr_##ident = (rv64i_csr_t){\
+      .addr = address,\
+      .value = init,\
+      .name = #ident,\
+      .get = csr_##handlers##_get,\
+      .set = csr_##handlers##_set,\
+      .next = NULL\
+  }
+  DEF_CSR(cycle, basic_uro, 0xc00, 0);
+  DEF_CSR(time, basic_uro, 0xc01, 0);
+  DEF_CSR(instret, basic_uro, 0xc02, 0);
+#undef DEF_CSR
+  rv64i_add_csr(cpu, &(cpu->csr_cycle));
+  rv64i_add_csr(cpu, &(cpu->csr_time));
+  rv64i_add_csr(cpu, &(cpu->csr_instret));
 }
 
 /* Add a memory region */
@@ -785,7 +783,7 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   if (incpc) cpu->pc += 4;
 
   /* Increment cycle CSR */
-  (CSR_CYCLE.value)++;
+  (cpu->csr_cycle.value)++;
 
   /* Report any ebreaks */
   return ebreak;
