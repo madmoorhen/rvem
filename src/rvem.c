@@ -719,11 +719,21 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
       switch (funct3) {
         case 0:
           switch (instr) {
+              /*
+               * NOTE: ebreak and ecall both cause synchronous exceptions, and
+               * the instret only increments when instructions execute without
+               * causing them. Execptions aren't implemented yet, so the counter
+               * is decremented here to cancel out the later increment
+               */
             case 0x00000073:
+              /* TODO: implement exceptions */
+              (cpu->csr_instret.value)--;
               if (verbose) printf("ecall\n");
               break;
             case 0x00100073:
               ebreak = true;
+              /* TODO: implement exceptions */
+              (cpu->csr_instret.value)--;
               if (verbose) printf("ebreak\n");
               break;
             default: UNRECOGNISED; break;
@@ -785,8 +795,10 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   /* Increment program counter */
   if (incpc) cpu->pc += 4;
 
-  /* Increment cycle CSR */
+  /* Increment cycle and instret CSR */
   (cpu->csr_cycle.value)++;
+  /* NOTE: this should not be incremented when exceptions occur */
+  (cpu->csr_instret.value)++;
 
   /* Report any ebreaks */
   return ebreak;
