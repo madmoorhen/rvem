@@ -379,7 +379,8 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
         cpu->pc += b_imm;
         incpc = false;
       }
-      if (verbose) printf("%s x%d, x%d, 0x%016lx\n", mneumonic, rs1, rs2, b_imm);
+      if (verbose)
+        printf("%s x%d, x%d, 0x%016lx\n", mneumonic, rs1, rs2, b_imm);
     } break;
     case 0x03: { /* Load */
       const char* mneumonic = NULL;
@@ -445,7 +446,8 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
           break;
         default: UNRECOGNISED; break;
       };
-      if (verbose) printf("%s x%d, 0x%016lx(x%d)\n", mneumonic, rs2, s_imm, rs1);
+      if (verbose)
+        printf("%s x%d, 0x%016lx(x%d)\n", mneumonic, rs2, s_imm, rs1);
     } break;
     case 0x13: { /* Arithmetic with immediate */
       const char *mneumonic = NULL;
