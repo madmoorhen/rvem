@@ -6,6 +6,12 @@
 #include <string.h>
 #include <stdio.h>
 
+/*
+ * rv64i with:
+ * - Zifencei
+ * - Zicsr
+ */
+
 /* Assertion */
 #define ASSERT(expr, msg) do {\
   if (!(expr)) {\
@@ -13,6 +19,28 @@
     exit(EXIT_FAILURE);\
   }\
 } while (0)
+
+/* CSR handler declarations */
+static uint64_t csr_cycle_get(void *cpu, void *csr);
+static void csr_cycle_set(void *cpu, void *csr, uint64_t val);
+static uint64_t csr_time_get(void *cpu, void *csr);
+static void csr_time_set(void *cpu, void *csr, uint64_t val);
+static uint64_t csr_instret_get(void *cpu, void *csr);
+static void csr_instret_set(void *cpu, void *csr, uint64_t val);
+
+/* CSRs */
+#define DEF_CSR(caps, lower, address, init) static rv64i_csr_t CSR_##caps = {\
+    .addr = address,\
+    .value = init,\
+    .name = #lower,\
+    .get = csr_##lower##_get,\
+    .set = csr_##lower##_set,\
+    .next = NULL\
+}
+DEF_CSR(CYCLE, cycle, 0xc00, 0);
+DEF_CSR(TIME, time, 0xc01, 0);
+DEF_CSR(INSTRET, instret, 0xc02, 0);
+#undef DEF_CSR
 
 /* Signed value from unsigned (reinterpret) */
 static int32_t signedw(uint32_t val) { return *((int32_t *)(&val)); }
@@ -26,6 +54,9 @@ void rv64i_init(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_init");
   cpu->regions = NULL;
   cpu->csrs = NULL;
+  rv64i_add_csr(cpu, &CSR_CYCLE);
+  rv64i_add_csr(cpu, &CSR_TIME);
+  rv64i_add_csr(cpu, &CSR_INSTRET);
 }
 
 /* Add a memory region */
@@ -757,3 +788,11 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   /* Report any ebreaks */
   return ebreak;
 }
+
+/* CSR handler definitions */
+static uint64_t csr_cycle_get(void *cpu, void *csr) { return 0; } /* TODO */
+static void csr_cycle_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
+static uint64_t csr_time_get(void *cpu, void *csr) { return 0; } /* TODO */
+static void csr_time_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
+static uint64_t csr_instret_get(void *cpu, void *csr) { return 0; } /* TODO */
+static void csr_instret_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
