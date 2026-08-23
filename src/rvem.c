@@ -21,25 +21,22 @@
 } while (0)
 
 /* CSR handler declarations */
-static uint64_t csr_cycle_get(void *cpu, void *csr);
-static void csr_cycle_set(void *cpu, void *csr, uint64_t val);
-static uint64_t csr_time_get(void *cpu, void *csr);
-static void csr_time_set(void *cpu, void *csr, uint64_t val);
-static uint64_t csr_instret_get(void *cpu, void *csr);
-static void csr_instret_set(void *cpu, void *csr, uint64_t val);
+static uint64_t csr_basic_uro_get(void *cpu, void *csr);
+static void csr_basic_uro_set(void *cpu, void *csr, uint64_t val);
 
 /* CSRs */
-#define DEF_CSR(caps, lower, address, init) static rv64i_csr_t CSR_##caps = {\
+#define DEF_CSR(caps, lower, handlers, address, init) \
+static rv64i_csr_t CSR_##caps = {\
     .addr = address,\
     .value = init,\
     .name = #lower,\
-    .get = csr_##lower##_get,\
-    .set = csr_##lower##_set,\
+    .get = csr_##handlers##_get,\
+    .set = csr_##handlers##_set,\
     .next = NULL\
 }
-DEF_CSR(CYCLE, cycle, 0xc00, 0);
-DEF_CSR(TIME, time, 0xc01, 0);
-DEF_CSR(INSTRET, instret, 0xc02, 0);
+DEF_CSR(CYCLE, cycle, basic_uro, 0xc00, 0);
+DEF_CSR(TIME, time, basic_uro, 0xc01, 0);
+DEF_CSR(INSTRET, instret, basic_uro, 0xc02, 0);
 #undef DEF_CSR
 
 /* Signed value from unsigned (reinterpret) */
@@ -793,9 +790,9 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
 }
 
 /* CSR handler definitions */
-static uint64_t csr_cycle_get(void *cpu, void *csr) { return CSR_CYCLE.value; }
-static void csr_cycle_set(void *cpu, void *csr, uint64_t val) { } /* !!! */
-static uint64_t csr_time_get(void *cpu, void *csr) { return 0; } /* TODO */
-static void csr_time_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
-static uint64_t csr_instret_get(void *cpu, void *csr) { return 0; } /* TODO */
-static void csr_instret_set(void *cpu, void *csr, uint64_t val) { } /* TODO */
+static uint64_t csr_basic_uro_get(void *cpu, void *csr) {
+  return ((rv64i_csr_t *)(csr))->value;
+}
+static void csr_basic_uro_set(void *cpu, void *csr, uint64_t val) {
+  /* NOTE: This should probably throw an exception. */
+}
