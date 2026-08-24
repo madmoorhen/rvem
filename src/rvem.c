@@ -30,23 +30,38 @@ void rv64i_init(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_init");
   cpu->regions = NULL;
   cpu->csrs = NULL;
+  rv64i_csr_t *current_csr;
 #define DEF_CSR(ident, handlers, address, init) \
-  cpu->csr_##ident = (rv64i_csr_t){\
-      .addr = address,\
-      .value = init,\
-      .name = #ident,\
-      .get = csr_##handlers##_get,\
-      .set = csr_##handlers##_set,\
-      .next = NULL\
-  }
+  current_csr = NULL;\
+  current_csr = malloc(sizeof(rv64i_csr_t));\
+  ASSERT(current_csr, "malloc() failed");\
+  current_csr->addr = address;\
+  current_csr->value = init;\
+  current_csr->name = #ident;\
+  current_csr->internal = true;\
+  current_csr->get = csr_##handlers##_get;\
+  current_csr->set = csr_##handlers##_set;\
+  current_csr->next = NULL;\
+  rv64i_add_csr(cpu, current_csr);
   DEF_CSR(cycle, basic_uro, 0xc00, 0);
   DEF_CSR(time, basic_uro, 0xc01, 0);
   DEF_CSR(instret, basic_uro, 0xc02, 0);
 #undef DEF_CSR
-  rv64i_add_csr(cpu, &(cpu->csr_cycle));
-  rv64i_add_csr(cpu, &(cpu->csr_time));
-  rv64i_add_csr(cpu, &(cpu->csr_instret));
   clock_gettime(CLOCK_MONOTONIC, &(cpu->prev_time));
+}
+/* Cleanup resources used by the processor */
+void rv64i_cleanup(rv64i_t *cpu) {
+  ASSERT(cpu, "NULL passed as cpu to rv64i_cleanup");
+  if (cpu->csrs) {
+    rv64i_csr_t *c = cpu->csrs;
+    while (c) {
+      rv64i_csr_t *tmp = c->next;
+      if (c->internal) free(c);
+      c = tmp;
+    }
+  }
+  cpu->csrs = NULL;
+  cpu->regions = NULL;
 }
 
 /* Add a memory region */
@@ -273,9 +288,9 @@ void rv64i_reset(rv64i_t *cpu) {
   ASSERT(cpu, "NULL passed as cpu to rv64i_reset");
   for (uint8_t i = 0; i < 32; i++) rv64i_set_reg(cpu, i, 0);
   cpu->pc = 0;
-  (cpu->csr_cycle.value) = 0;
-  (cpu->csr_time.value) = 0;
-  (cpu->csr_instret.value) = 0;
+  rv64i_find_csr_name(cpu, "cycle")->value = 0;
+  rv64i_find_csr_name(cpu, "time")->value = 0;
+  rv64i_find_csr_name(cpu, "instret")->value = 0;
   printf("reset ocurred\n");
 }
 /* Step the processor - returns true on ebreak */
@@ -285,8 +300,10 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   /* Update time CSR */
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
-  (cpu->csr_time.value) += (t.tv_sec - (cpu->prev_time).tv_sec)*10000000;
-  (cpu->csr_time.value) += (t.tv_nsec - (cpu->prev_time).tv_nsec)/100;
+  rv64i_find_csr_name(cpu, "time")->value +=
+      (t.tv_sec - (cpu->prev_time).tv_sec)*10000000; 
+  rv64i_find_csr_name(cpu, "time")->value +=
+      (t.tv_nsec - (cpu->prev_time).tv_nsec)/100;
   (cpu->prev_time) = t;
 
   /* Fetch */
@@ -729,13 +746,13 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
                */
             case 0x00000073:
               /* TODO: implement exceptions */
-              (cpu->csr_instret.value)--;
+              rv64i_find_csr_name(cpu, "instret")->value--;
               if (verbose) printf("ecall\n");
               break;
             case 0x00100073:
               ebreak = true;
               /* TODO: implement exceptions */
-              (cpu->csr_instret.value)--;
+              rv64i_find_csr_name(cpu, "instret")->value--;
               if (verbose) printf("ebreak\n");
               break;
             default: UNRECOGNISED; break;
@@ -798,9 +815,9 @@ bool rv64i_step(rv64i_t *cpu, bool verbose) {
   if (incpc) cpu->pc += 4;
 
   /* Increment cycle and instret CSR */
-  (cpu->csr_cycle.value)++;
+  rv64i_find_csr_name(cpu, "cycle")->value++;
   /* NOTE: this should not be incremented when exceptions occur */
-  (cpu->csr_instret.value)++;
+  rv64i_find_csr_name(cpu, "instret")->value++;
 
   /* Report any ebreaks */
   return ebreak;

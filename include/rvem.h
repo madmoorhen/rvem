@@ -32,6 +32,7 @@ typedef struct {
   uint16_t addr: 12;
   uint64_t value;
   const char *name;
+  bool internal; /* If true, owned by (with memory managed by) cpu itself */
   uint64_t (*get)(void *cpu, void *csr);
   void (*set)(void *cpu, void *csr, uint64_t val);
   void *next;
@@ -43,12 +44,13 @@ typedef struct {
   uint64_t pc;
   memory_region_t *regions;
   rv64i_csr_t *csrs;
-  rv64i_csr_t csr_cycle, csr_time, csr_instret;
   struct timespec prev_time;
 } rv64i_t;
 
 /* Initialise the processor */
 extern void rv64i_init(rv64i_t *cpu);
+/* Cleanup resources used by the processor */
+extern void rv64i_cleanup(rv64i_t *cpu);
 
 /* Add a memory region */
 extern void rv64i_add_region(rv64i_t *cpu, memory_region_t *region);
