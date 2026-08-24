@@ -157,6 +157,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Cleanup */
+  rv64i_cleanup(&cpu);
   free(prog_mem);
   free(data_mem);
   free(uart_mem);
